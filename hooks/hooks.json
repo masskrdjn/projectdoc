@@ -1,0 +1,20 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [{
+      "hooks": [{
+        "type": "command",
+        "command": "python \"${PLUGIN_ROOT}/hooks/documentation.py\"",
+        "timeout": 20,
+        "statusMessage": "Checking project documentation"
+      }]
+    }],
+    "Stop": [{
+      "hooks": [{
+        "type": "command",
+        "command": "python \"${PLUGIN_ROOT}/hooks/documentation.py\"",
+        "timeout": 20,
+        "statusMessage": "Checking documentation after development"
+      }]
+    }]
+  }
+}

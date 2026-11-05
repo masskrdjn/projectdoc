@@ -1,0 +1,17 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "projectdoc",
+  "version": "0.1.1",
+  "repository": "https://github.com/masskrdjn/projectdoc",
+  "description": "Keep project documentation useful, accessible and current after development in Codex.",
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json",
+  "interface": {
+    "displayName": "ProjectDoc",
+    "shortDescription": "Une documentation claire, tenue à jour avec le projet.",
+    "longDescription": "Après approbation des hooks, Codex vérifie la documentation à chaque tâche et la crée ou la met à jour lorsque le développement le nécessite. Respecte les documents existants, privilégie la concision et propose Mermaid ou SVG quand un schéma aide à comprendre.",
+    "category": "Developer Tools",
+    "capabilities": ["Instructions", "Write"],
+    "defaultPrompt": "Vérifie la documentation de ce projet et crée ou actualise ce qui manque pour permettre une prise en main facile."
+  }
+}
