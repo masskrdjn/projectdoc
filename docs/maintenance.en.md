@@ -7,7 +7,7 @@ that Codex runs during a task, remind it of the rules and check for omissions.
 
 | File | Purpose |
 | --- | --- |
-| `plugin.json` | Plugin name, version, and components. |
+| `.codex-plugin/plugin.json` | Codex manifest: plugin name, version, and components. |
 | `.agents/plugins/marketplace.json` | Plugin catalog supplied by the GitHub repository. |
 | `AGENTS.md` | Coding, documentation, and version rules. |
 | `CHANGELOG.md` | Changes by version. |
@@ -30,6 +30,22 @@ is missing, it asks Codex to review the docs. A blank page or a diagram alone
 does not count as readable documentation. The hook repeats the language rules
 on a continuation and requests at most one continuation per task. The check
 cannot tell whether the text is accurate; Codex still needs to read it.
+
+## Standalone documentation review
+
+If the project has no reader documentation and the user gives no scope, the
+skill reviews the whole project and creates a README, even when Git has
+pending changes.
+
+If documentation exists and the user gives no scope, the skill reviews all
+pending Git changes:
+staged changes, unstaged changes, and untracked files Git does not ignore.
+Codex identifies the affected behaviors and explains what it updated or why
+no update was needed for each one. If the user names a specific area, the
+review stays within it.
+
+The `Stop` hook remains a reminder for changes made during the turn. It does
+not verify that the edited pages cover every affected behavior.
 
 ## Scope and limits
 
@@ -54,11 +70,35 @@ a service. It stores file names, fingerprints, and timestamps for each task in
 `PLUGIN_DATA/turns/`, or in `codex-projectdoc/turns/` under the temporary directory
 when `PLUGIN_DATA` is unavailable. Completed tasks' state can be removed.
 
+## Troubleshoot the hooks
+
+In **Settings > Hooks**, check that both ProjectDoc hooks are listed and trusted.
+To see their decisions, start Codex with `PROJECTDOC_DEBUG=1` in the launching
+process's environment. Traces appear as Codex warnings and include no IDs,
+paths, or file contents. Remove the variable and restart to turn them off.
+
+In a disposable Git repository, prepare a tracked `.txt` file, then ask Codex
+to add one trailing space without other edits. Look for `baseline saved` at the
+start and `documentation review requested` at the end, followed by one
+continuation. If `Stop` reports `no baseline`, check for the start trace in the
+same turn. Warnings name missing fields. If no trace appears at all, check
+hook approval and whether Codex can launch Python.
+
 ## Verify and release a change
 
 Run `python -m unittest discover -s tests -v`. The tests cover new and changed
 documentation, file deletion, read-only tasks, the single continuation limit,
 Git exclusions, and checks with English and French requests.
+
+An isolated installation of version 0.2.1 confirmed that Codex detects both
+hooks. A full run in the desktop app still needs to be checked after approval.
+
+To check the skill's scope, prepare three independent changes before starting
+a new chat: a staged PDF change, an unstaged mail change, and an untracked
+classification file. Make the mail and classification docs accurate and the
+PDF docs outdated. Invoke the skill on its own: it should fix the PDF docs and
+report on all three areas. Repeat on a copy with a request limited to PDFs:
+only PDFs should be in the review summary.
 
 To check language behavior in Codex, install the plugin and approve its hooks.
 Request the same small change in English and French in two projects without
@@ -67,7 +107,7 @@ Then make an English request in a project with French docs: the reply should be
 in English and the documentation update in French. Python tests check the hook
 logic; they do not verify how Codex writes the resulting documents.
 
-Before each release, increment the version in `plugin.json` and record the
+Before each release, increment the version in the manifest and record the
 change in `CHANGELOG.md` as described in `AGENTS.md`. Keep both guides aligned.
 
 References: [Codex hooks](https://developers.openai.com/codex/hooks),

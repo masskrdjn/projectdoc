@@ -22,6 +22,12 @@ DOC_DIRS = {"docs", "doc", "documentation", "guide", "guides", "handbook"}
 TEXT_DOCS = {".md", ".mdx", ".rst", ".adoc"}
 MAX_FILES = 15000
 MAX_BYTES = 128 * 1024 * 1024
+
+
+class CheckUnavailable(ValueError):
+    """An explanation safe to include in a hook warning."""
+
+
 LANGUAGE_POLICY = (
     "Follow the user's conversation language for replies and explanations; "
     "the English wording of these internal instructions is not a language preference. "
@@ -102,7 +108,7 @@ def snapshot(root: Path, use_git: bool) -> dict:
         count += 1
         total += path.stat().st_size
         if count > MAX_FILES or total > MAX_BYTES:
-            raise ValueError("project exceeds the snapshot reading budget")
+            raise CheckUnavailable("snapshot budget exceeded")
         digest = hashlib.sha256()
         with path.open("rb") as stream:
             for chunk in iter(lambda: stream.read(65536), b""):
@@ -122,13 +128,15 @@ def snapshot(root: Path, use_git: bool) -> dict:
 def state_path(event: dict, root: Path) -> Path:
     session = event.get("session_id")
     turn = event.get("turn_id")
-    if not isinstance(session, str) or not session or not isinstance(turn, str) or not turn:
-        raise ValueError("missing session or turn identifier")
+    if not isinstance(session, str) or not session:
+        raise CheckUnavailable("missing session_id")
+    if not isinstance(turn, str) or not turn:
+        raise CheckUnavailable("missing turn_id")
     base = Path(os.environ.get("PLUGIN_DATA") or (Path(tempfile.gettempdir()) / "codex-projectdoc"))
     base = base / "turns"
     base.mkdir(parents=True, exist_ok=True)
     if base.is_symlink() or (hasattr(base, "is_junction") and base.is_junction()):
-        raise ValueError("linked state directory")
+        raise CheckUnavailable("linked state directory")
     key = hashlib.sha256(json.dumps([str(root), session, turn]).encode()).hexdigest()
     return base / f"{key}.json"
 
@@ -149,37 +157,46 @@ def context(message: str) -> dict:
     return {"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": message}}
 
 
+def outcome(name: str, status: str, output: dict | None = None) -> dict | None:
+    # Use Codex's own event stream; never write the event payload to a log.
+    if os.environ.get("PROJECTDOC_DEBUG") == "1":
+        return {**(output or {}), "systemMessage": f"ProjectDoc [{name}]: {status}."}
+    return output
+
+
 def handle(event: dict) -> dict | None:
     name = event.get("hook_event_name")
     if name not in {"UserPromptSubmit", "Stop"}:
-        return None
+        return {"systemMessage": "ProjectDoc: unsupported hook event; check not performed."}
     if name == "Stop" and event.get("stop_hook_active") is True:
-        return None
+        return outcome(name, "runtime continuation already active")
     try:
         cwd = event.get("cwd")
-        if not isinstance(cwd, str) or not Path(cwd).is_dir():
-            raise ValueError("missing working directory")
+        if not isinstance(cwd, str) or not cwd or not Path(cwd).is_dir():
+            raise CheckUnavailable("missing or invalid cwd")
         root, use_git = project_root(Path(cwd))
         path = state_path(event, root)
         if name == "UserPromptSubmit":
             before = snapshot(root, use_git)
             save(path, {"before": before, "created": time.time(), "blocked": False})
-            return context(CONTEXT)
+            return outcome(name, "baseline saved", context(CONTEXT))
         if not path.is_file() or path.is_symlink():
-            raise ValueError("turn baseline unavailable")
+            raise CheckUnavailable("no baseline for this project, session and turn")
         state = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(state, dict):
+            raise CheckUnavailable("invalid baseline")
         if state.get("blocked"):
-            return None
+            return outcome(name, "review already requested")
         after = snapshot(root, use_git)
         before = state["before"]
         if before["code"] == after["code"]:
-            return None
+            return outcome(name, "no project file changes")
         if after["readable_docs"] and before["docs"] != after["docs"]:
-            return None
+            return outcome(name, "documentation changed")
         # Once per turn, even if a runtime omits stop_hook_active on continuation.
         state["blocked"] = True
         save(path, state)
-        return {"decision": "block", "reason": (
+        return outcome(name, "documentation review requested", {"decision": "block", "reason": (
             "ProjectDoc: project files changed during this task without a detected "
             "documentation update. Read the skill at " + SKILL.as_posix() +
             ". Review documentation now; create it if missing (README.md by default), "
@@ -187,12 +204,13 @@ def handle(event: dict) -> dict | None:
             "accurate, briefly explain why no update is needed. Do not make "
             "artificial edits. Then finish; this check will not request a second "
             "continuation. " + LANGUAGE_POLICY
-        )}
-    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
-        warning = ("ProjectDoc: automatic check unavailable; review documentation "
+        )})
+    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
+        detail = str(error) if isinstance(error, CheckUnavailable) else "could not read or write check data"
+        warning = (f"ProjectDoc [{name}]: automatic check unavailable ({detail}); review documentation "
                    "using the skill. No automatic validation was completed. " + LANGUAGE_POLICY)
         if name == "UserPromptSubmit":
-            return context(CONTEXT + "\n" + warning)
+            return {**context(CONTEXT + "\n" + warning), "systemMessage": warning}
         return {"systemMessage": warning}
 
 

@@ -46,8 +46,16 @@ of your request, falling back to English when unclear. Plugin labels are in Engl
    one more review before Codex finishes.
 
 An internal fix may leave the documentation accurate. In that case, Codex can
-briefly explain why no update is needed. You can also invoke the
-`maintain-project-docs` skill directly.
+briefly explain why no update is needed.
+
+For a standalone documentation review, invoke the `maintain-project-docs`
+skill directly. With no specified scope, it covers the whole project and
+creates a README if there is no documentation. If documentation already
+exists, it reviews pending Git changes and reports on each area of work.
+Name a feature or file to limit the review.
+
+If no check appears, open **Settings > Hooks** in Codex and follow the
+[hook troubleshooting steps](docs/maintenance.en.md#troubleshoot-the-hooks).
 
 ## Where to find project documentation
 

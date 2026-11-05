@@ -1,7 +1,6 @@
 {
-  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "projectdoc",
-  "version": "0.2.0",
+  "version": "0.2.3",
   "repository": "https://github.com/masskrdjn/projectdoc",
   "description": "Keep project documentation useful, accessible and current after development in Codex.",
   "skills": "./skills/",
@@ -12,6 +11,6 @@
     "longDescription": "After hook approval, Codex checks documentation during development and creates or updates it as needed. Follows the user's language automatically, preserves existing documentation languages, and uses plain words and useful Mermaid or SVG diagrams. English and French guides included.",
     "category": "Developer Tools",
     "capabilities": ["Instructions", "Write"],
-    "defaultPrompt": "Review this project's documentation and create or update what is needed for an easy handover. Follow the user's conversation language, or the existing documentation language if there is no prior conversation."
+    "defaultPrompt": "Review this project's documentation and update what is needed for handover. Reply in the user's language."
   }
 }

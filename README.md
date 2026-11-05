@@ -54,8 +54,14 @@ Une correction interne peut laisser les documents parfaitement exacts : Codex
 explique alors brièvement qu'aucune mise à jour n'est nécessaire. Le contrôle
 ne demande qu'une seule reprise par tâche, pour éviter une boucle.
 
-Les règles sont aussi disponibles par invocation explicite du skill
-`maintain-project-docs` dans Codex.
+Pour une revue documentaire autonome, invoquez le skill
+`maintain-project-docs` dans Codex. Sans périmètre indiqué, il examine le projet
+entier si celui-ci est dépourvu de documentation et crée son README. Si une documentation
+existe, il examine les changements Git en cours et rend compte de chaque
+chantier. Nommez un chantier ou un fichier pour limiter la revue.
+
+Si aucune vérification n'apparaît, consultez **Réglages > Hooks** dans Codex,
+puis suivez le [diagnostic des hooks](docs/maintenance.md#diagnostiquer-les-hooks).
 
 ## Où trouver les documents des projets
 

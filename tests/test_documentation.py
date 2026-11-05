@@ -120,8 +120,20 @@ class DocumentationTests(unittest.TestCase):
         self.write("another.py", "another")
         self.assert_blocked()
 
-    def test_missing_baseline_warns(self):
-        self.assertIn("systemMessage", self.call("Stop"))
+    def test_missing_baseline_warns_without_blocking(self):
+        result = self.call("Stop")
+        self.assertIn("no baseline", result["systemMessage"])
+        self.assertNotIn("decision", result)
+
+    def test_missing_event_fields_warn_without_exposing_event_values(self):
+        for name in ("UserPromptSubmit", "Stop"):
+            for field in self.event:
+                with self.subTest(name=name, field=field):
+                    result = self.call(name, **{field: ""})
+                    warning = result["systemMessage"]
+                    self.assertIn(field, warning)
+                    self.assertNotIn(str(self.root), warning)
+                    self.assertNotIn("decision", result)
 
     def test_budget_exceeded_warns(self):
         with patch.object(hook, "MAX_FILES", 0):
@@ -166,14 +178,29 @@ class DocumentationTests(unittest.TestCase):
         self.write("main.py", "changed during the task")
         self.assert_blocked()
 
-    def test_command_reads_json_and_returns_context(self):
-        process = subprocess.run(
-            [os.sys.executable, str(ROOT / "hooks/documentation.py")],
-            input=json.dumps({**self.event, "hook_event_name": "UserPromptSubmit"}),
-            text=True, capture_output=True, check=True,
-            env={**os.environ, "TMP": str(self.temp), "TEMP": str(self.temp)},
-        )
-        self.assertEqual(json.loads(process.stdout)["hookSpecificOutput"]["hookEventName"], "UserPromptSubmit")
+    @unittest.skipUnless(shutil.which("git"), "Git unavailable")
+    def test_commands_share_baseline_and_trace_a_single_continuation(self):
+        def run(name):
+            process = subprocess.run(
+                [os.sys.executable, str(ROOT / "hooks/documentation.py")],
+                input=json.dumps({**self.event, "hook_event_name": name}),
+                text=True, capture_output=True, check=True,
+                env={**os.environ, "PROJECTDOC_DEBUG": "1"},
+            )
+            return json.loads(process.stdout)
+
+        subprocess.run(["git", "init", "-q", str(self.root)], check=True)
+        self.write("tmp_trigger.txt", "existing\n")
+        start = run("UserPromptSubmit")
+        self.assertEqual(start["hookSpecificOutput"]["hookEventName"], "UserPromptSubmit")
+        self.assertIn("baseline saved", start["systemMessage"])
+        self.write("tmp_trigger.txt", "existing \n")
+        stop = run("Stop")
+        self.assertEqual(stop["decision"], "block")
+        self.assertIn("documentation review requested", stop["systemMessage"])
+        repeat = run("Stop")
+        self.assertIn("review already requested", repeat["systemMessage"])
+        self.assertNotIn("decision", repeat)
 
 
 if __name__ == "__main__":

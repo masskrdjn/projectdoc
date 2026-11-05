@@ -16,7 +16,7 @@
 ## Version et livraison
 
 Après chaque développement livré, y compris une évolution des instructions ou
-de la documentation, incrémenter la version dans `plugin.json` avant le commit.
+de la documentation, incrémenter la version dans `.codex-plugin/plugin.json` avant le commit.
 Utiliser `MAJEURE.MINEURE.CORRECTIF` : correctif pour une correction ou de la
 documentation, mineure pour une fonctionnalité compatible, majeure pour une
 rupture de compatibilité. Un lot cohérent de changements reçoit une seule version.
