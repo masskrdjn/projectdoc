@@ -127,7 +127,32 @@ class DocumentationTests(unittest.TestCase):
         with patch.object(hook, "MAX_FILES", 0):
             self.write("main.py", "new")
             result = self.call("UserPromptSubmit")
-        self.assertIn("indisponible", result["hookSpecificOutput"]["additionalContext"])
+        self.assertIn("unavailable", result["hookSpecificOutput"]["additionalContext"])
+
+    def test_english_and_french_requests_follow_the_same_checks(self):
+        cases = [
+            ("en", "Add a greeting", "Run python main.py for a greeting."),
+            ("fr", "Ajoute un message d'accueil", "Lancer python main.py pour un message d'accueil."),
+        ]
+        for language, prompt, document in cases:
+            with self.subTest(language=language):
+                self.event["turn_id"] = language
+                self.call("UserPromptSubmit", prompt=prompt)
+                self.write("main.py", language)
+                self.write("README.md", document)
+                self.assertIsNone(self.call("Stop"))
+                self.assertEqual((self.root / "README.md").read_text(encoding="utf-8"), document)
+                state = hook.state_path(self.event, self.root).read_text(encoding="utf-8")
+                self.assertNotIn(prompt, state)
+
+    def test_english_request_does_not_rewrite_french_documents(self):
+        document = "# Projet\nComment commencer : lancer python main.py."
+        self.write("README.md", document)
+        self.call("UserPromptSubmit", prompt="Fix the internal counter")
+        self.write("main.py", "counter = 0")
+        self.assert_blocked()
+        self.assertEqual((self.root / "README.md").read_text(encoding="utf-8"), document)
+        self.assertIsNone(self.call("Stop", stop_hook_active=True))
 
     @unittest.skipUnless(shutil.which("git"), "Git unavailable")
     def test_git_ignores_generated_files_and_keeps_dirty_baseline(self):

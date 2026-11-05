@@ -1,5 +1,7 @@
 # ProjectDoc
 
+[English](README.en.md) · Français
+
 ProjectDoc aide Codex à garder une documentation courte et utile au fil du
 développement. Il la crée si elle manque et actualise les explications concernées
 si elle existe déjà. Une personne qui découvre ou reprend le projet doit pouvoir
@@ -41,6 +43,12 @@ Codex et approuver à nouveau les hooks si leur contenu a changé.
 2. Il réalise le changement, puis crée ou actualise les explications nécessaires.
 3. Un contrôle compare les fichiers au début et à la fin. Si le projet a changé
    sans changement documentaire, il demande une vérification supplémentaire.
+
+Vous pouvez parler à Codex en français ou en anglais sans changer de réglage.
+Codex répond dans la langue de votre demande. Il conserve la langue des documents
+existants, sauf consigne contraire. Si le projet n'a pas de documentation, il
+utilise la langue de votre demande, ou l'anglais si elle est indéterminée. Les
+libellés techniques du plugin sont en anglais.
 
 Une correction interne peut laisser les documents parfaitement exacts : Codex
 explique alors brièvement qu'aucune mise à jour n'est nécessaire. Le contrôle

@@ -22,16 +22,25 @@ DOC_DIRS = {"docs", "doc", "documentation", "guide", "guides", "handbook"}
 TEXT_DOCS = {".md", ".mdx", ".rst", ".adoc"}
 MAX_FILES = 15000
 MAX_BYTES = 128 * 1024 * 1024
+LANGUAGE_POLICY = (
+    "Follow the user's conversation language for replies and explanations; "
+    "the English wording of these internal instructions is not a language preference. "
+    "For documentation, follow explicit user requirements, then project language rules. "
+    "Otherwise preserve each document's language and match it for related new pages. "
+    "If no documentation exists, use the user's language, falling back to English. "
+    "If the project already maintains multiple languages, keep affected translations "
+    "consistent. Do not add translations or a language selection step unless requested."
+)
 CONTEXT = (
-    "ProjectDoc : pour toute tâche de développement, lire le skill à "
-    f"{SKILL.as_posix()} avant les modifications. Repérer la documentation existante, "
-    "puis la créer si elle manque ou actualiser les explications affectées avant "
-    "de terminer. Préserver son organisation ; par défaut README.md pour l'accueil "
-    "et docs/ pour les détails. Écrire pour une personne qui découvre le projet : "
-    "mots courants, texte bref, prise en main et liens faciles à trouver. "
-    "Ajouter Mermaid ou SVG seulement si cela aide, avec une explication textuelle. "
-    "Une correction interne peut ne nécessiter aucune mise à jour : l'expliquer "
-    "brièvement. Une tâche de lecture seule n'impose aucune création."
+    "ProjectDoc: for development tasks, read the skill at "
+    f"{SKILL.as_posix()} before making changes. Find existing documentation, "
+    "then create it if missing or update affected explanations before finishing. "
+    "Keep its existing structure; default to README.md for the entry point and "
+    "docs/ for details. Write for someone new to the project: plain words, short "
+    "text, clear setup steps and easy navigation. Add Mermaid or SVG only when "
+    "helpful, with a text explanation. An internal fix may need no documentation "
+    "change: explain that briefly. Read-only tasks require no new files. "
+    + LANGUAGE_POLICY
 )
 
 
@@ -93,7 +102,7 @@ def snapshot(root: Path, use_git: bool) -> dict:
         count += 1
         total += path.stat().st_size
         if count > MAX_FILES or total > MAX_BYTES:
-            raise ValueError("projet au-delà du budget de lecture du contrôle")
+            raise ValueError("project exceeds the snapshot reading budget")
         digest = hashlib.sha256()
         with path.open("rb") as stream:
             for chunk in iter(lambda: stream.read(65536), b""):
@@ -114,12 +123,12 @@ def state_path(event: dict, root: Path) -> Path:
     session = event.get("session_id")
     turn = event.get("turn_id")
     if not isinstance(session, str) or not session or not isinstance(turn, str) or not turn:
-        raise ValueError("identifiant de session ou de tour absent")
+        raise ValueError("missing session or turn identifier")
     base = Path(os.environ.get("PLUGIN_DATA") or (Path(tempfile.gettempdir()) / "codex-projectdoc"))
     base = base / "turns"
     base.mkdir(parents=True, exist_ok=True)
     if base.is_symlink() or (hasattr(base, "is_junction") and base.is_junction()):
-        raise ValueError("dossier d'état lié")
+        raise ValueError("linked state directory")
     key = hashlib.sha256(json.dumps([str(root), session, turn]).encode()).hexdigest()
     return base / f"{key}.json"
 
@@ -149,7 +158,7 @@ def handle(event: dict) -> dict | None:
     try:
         cwd = event.get("cwd")
         if not isinstance(cwd, str) or not Path(cwd).is_dir():
-            raise ValueError("dossier de travail absent")
+            raise ValueError("missing working directory")
         root, use_git = project_root(Path(cwd))
         path = state_path(event, root)
         if name == "UserPromptSubmit":
@@ -157,7 +166,7 @@ def handle(event: dict) -> dict | None:
             save(path, {"before": before, "created": time.time(), "blocked": False})
             return context(CONTEXT)
         if not path.is_file() or path.is_symlink():
-            raise ValueError("état initial du tour indisponible")
+            raise ValueError("turn baseline unavailable")
         state = json.loads(path.read_text(encoding="utf-8"))
         if state.get("blocked"):
             return None
@@ -171,17 +180,17 @@ def handle(event: dict) -> dict | None:
         state["blocked"] = True
         save(path, state)
         return {"decision": "block", "reason": (
-            "ProjectDoc : des fichiers du projet ont changé pendant cette tâche, "
-            "sans mise à jour documentaire détectée. Lire le skill " + SKILL.as_posix() +
-            ". Vérifier maintenant la documentation et la créer si elle manque "
-            "(README.md par défaut), ou actualiser seulement les explications touchées. "
-            "Si les documents existants restent exacts, expliquer brièvement pourquoi "
-            "aucune modification n'est nécessaire. Ne pas faire de retouche artificielle. "
-            "Terminer ensuite ; ce contrôle ne demandera pas une seconde reprise."
+            "ProjectDoc: project files changed during this task without a detected "
+            "documentation update. Read the skill at " + SKILL.as_posix() +
+            ". Review documentation now; create it if missing (README.md by default), "
+            "or update only affected explanations. If existing documents remain "
+            "accurate, briefly explain why no update is needed. Do not make "
+            "artificial edits. Then finish; this check will not request a second "
+            "continuation. " + LANGUAGE_POLICY
         )}
     except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
-        warning = ("ProjectDoc : contrôle automatique indisponible ; effectuer la "
-                   "vérification documentaire avec le skill. Aucune validation automatique acquise.")
+        warning = ("ProjectDoc: automatic check unavailable; review documentation "
+                   "using the skill. No automatic validation was completed. " + LANGUAGE_POLICY)
         if name == "UserPromptSubmit":
             return context(CONTEXT + "\n" + warning)
         return {"systemMessage": warning}
@@ -197,7 +206,7 @@ def main() -> int:
             raise ValueError("invalid event")
         output = handle(event)
     except (ValueError, TypeError):
-        output = {"systemMessage": "ProjectDoc : événement invalide, contrôle non effectué."}
+        output = {"systemMessage": "ProjectDoc: invalid event; check not performed."}
     if output:
         print(json.dumps(output, ensure_ascii=True))
     return 0

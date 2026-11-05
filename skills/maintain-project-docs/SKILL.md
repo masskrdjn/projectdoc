@@ -3,70 +3,74 @@ name: maintain-project-docs
 description: Create or update concise project documentation when implementing features, fixing bugs, or changing setup, configuration, interfaces or architecture. Also use for project documentation and handover requests.
 ---
 
-# Documentation accessible
+# Accessible project documentation
 
-Le lecteur découvre le projet ou le reprend après une absence. Il doit comprendre
-à quoi il sert, pouvoir commencer et trouver où poursuivre sans lire le code.
-Respecter la langue des documents existants ; pour un projet neuf, utiliser celle
-de l'utilisateur. Écrire directement, en phrases courtes et en mots courants.
-Expliquer un terme technique nécessaire à sa première apparition. Ne pas produire
-de remplissage, de catalogue des fichiers ni de récit de la session.
+Write for someone who is new to the project or taking it over. Help them
+understand what it does, get started, and find their next step without reading
+the code. Use plain words and short sentences. Explain necessary technical terms
+on first use. Leave out filler, file inventories, and accounts of the work session.
 
-## Avant et après le développement
+## Language
 
-Avant de modifier le projet, repérer son point d'entrée documentaire et lire les
-pages concernées. Respecter ses instructions et ses choix d'organisation. Après
-le développement, confronter les documents au comportement livré et aux commandes
-effectivement vérifiées. Mettre à jour les seules explications affectées : usage,
-installation, réglages, interfaces, fonctionnement ou reprise du projet.
+Reply in the language of the user's request or conversation. The language of
+this skill does not set the response language. No language selection is needed.
 
-Si la documentation est absente, créer un README.md à la racine, même si le premier
-changement est petit. S'appuyer sur le code et les vérifications disponibles ;
-signaler les informations inconnues utiles, sans inventer une procédure qui marche.
-Une correction interne sans effet sur les explications existantes peut ne demander
-aucune modification documentaire : le signaler brièvement en fin de tâche.
-Ne pas modifier une documentation à jour uniquement pour satisfaire le contrôle.
+For documentation, follow an explicit user request, then any project language
+rules. Otherwise keep each existing document in its language. Write new pages
+in the language of the surrounding documentation. If the project has no
+documentation, use the user's language, with English as a fallback when it is
+unclear. If the project already maintains translations, update the affected
+versions together. Do not create new translations unless asked.
 
-## Placement et navigation
+For example, an English request to change a French project gets an English
+reply and French documentation updates. A new project requested in English
+gets an English README unless the user or project specifies another language.
 
-- Conserver les emplacements existants, y compris un site documentaire ou un dossier
-  au nom différent. Ne pas créer une deuxième source de vérité et ne pas déplacer
-  les pages sans nécessité.
-- Par défaut, placer l'accueil dans README.md : but du projet, démarrage rapide,
-  liens vers les explications utiles. Garder un projet simple sur cette seule page.
-- Utiliser docs/ quand un sujet mérite sa propre page. Chaque page doit être
-  accessible depuis le README, directement ou par un index, et proposer un retour
-  vers l'accueil. Préférer des liens relatifs versionnés avec le code.
-- Réserver AGENTS.md aux consignes de travail de Codex. .agents/ héberge les
-  ressources des agents ; ce n'est pas l'accueil documentaire des personnes.
-- Pour la reprise, indiquer les quelques commandes, réglages et dépendances
-  indispensables. Ajouter les décisions et limites utiles à la maintenance
-  seulement lorsqu'elles ne se déduisent pas des explications existantes.
+## Before and after development
 
-## Schémas utiles
+Before editing, find the documentation entry point and read the affected pages.
+Follow the project's instructions and existing structure. After development,
+compare the documentation with the delivered behavior and verified commands.
+Update only the affected explanations: usage, setup, configuration, interfaces,
+how it works, or what someone needs to take over.
 
-Ajouter un schéma s'il rend un parcours, des relations ou une circulation de
-données plus faciles à comprendre que quelques phrases. Ne pas en ajouter par
-principe. Employer des libellés courants, peu d'éléments et une légende si utile.
+If documentation is missing, create a root README.md even for a small change.
+Use the code and available evidence; identify important gaps without inventing
+working procedures. If an internal fix leaves existing explanations accurate,
+say briefly why no documentation change is needed. Do not edit accurate pages
+just to satisfy the check.
 
-Choisir Mermaid pour un schéma simple facile à modifier en texte, si le support
-de lecture sait l'afficher. Préférer un SVG local si un rendu précis, un export
-ou un lecteur sans Mermaid le justifie. Ranger le SVG dans docs/assets/ (ou le
-dossier équivalent existant), l'intégrer avec un texte alternatif descriptif,
-sans script, contenu distant ni ressource externe nécessaire au rendu.
-Dans les deux cas, conserver une courte explication textuelle compréhensible
-sans le dessin. Éviter deux versions manuellement synchronisées du même schéma.
+## Placement and navigation
 
-## Vérification finale
+- Keep existing locations, including a documentation site or custom directory.
+  Avoid duplicate sources of truth and unnecessary moves.
+- Default to README.md for the entry point: purpose, quick start, and links to
+  further help. A single page is enough for a simple project.
+- Use docs/ when a topic needs a separate page. Link each page from the README
+  or an index and provide a route back. Prefer versioned relative links.
+- Use AGENTS.md for Codex instructions and .agents/ for agent resources.
+- For handover, include the essential commands, settings, and dependencies.
+  Explain maintenance decisions or limitations when they are otherwise unclear.
 
-Relire avec le regard d'une personne nouvelle : le but, le premier pas et la
-navigation sont-ils évidents ? Les exemples correspondent-ils au changement ?
-Vérifier les liens relatifs et les commandes concernées lorsque l'environnement
-le permet. Utiliser le moteur de rendu existant pour les schémas, s'il est
-disponible ; sinon indiquer que leur rendu n'a pas été vérifié.
-Ne jamais copier de secrets ou de données personnelles depuis le code ou les
-réglages. Ne pas publier les documents ni modifier des droits de partage.
+## Useful diagrams
 
-Le hook fournit un rappel et un contrôle des changements de fichiers. Il ne
-juge pas la justesse du texte. Si le contrôle demande une reprise, effectuer
-la vérification documentaire puis terminer, en indiquant toute limite réelle.
+Add a diagram when it makes a workflow, relationship, or flow of data easier
+to follow than a short paragraph. Use plain labels and few elements.
+
+Choose Mermaid for a simple diagram when the reading surface can render it.
+Choose a local SVG for precise layout, export, or readers without Mermaid.
+Store SVGs under docs/assets/ or the existing equivalent, add descriptive alt
+text, and keep them free of scripts and external resources. Provide a short
+text explanation in either case. Avoid maintaining two copies of one diagram.
+
+## Final check
+
+Read it as a newcomer: are the purpose, first step, and links clear? Do the
+examples match the change? Check the relevant links and commands when possible.
+Render diagrams using the project's existing tools if available; otherwise
+mention that rendering was not verified. Do not copy secrets or personal data.
+Do not publish documents or change sharing permissions.
+
+The hook reminds Codex to review documentation and compares file changes.
+It cannot judge the text. If it requests a continuation, complete the review
+and finish, mentioning any actual limits.

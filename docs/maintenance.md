@@ -1,6 +1,6 @@
 # Reprendre ProjectDoc
 
-[Retour à l'accueil](../README.md)
+[Retour à l'accueil](../README.md) · [English](maintenance.en.md)
 
 Le plugin associe un skill, qui explique à Codex comment rédiger, et des hooks,
 de petits programmes lancés pour rappeler les consignes et contrôler les oublis.
@@ -33,6 +33,11 @@ existe, le contrôle laisse terminer.
 Il ne demande qu'une reprise par tour, grâce au signal `stop_hook_active` de
 Codex et à une trace enregistrée de sa demande. La comparaison ne prouve pas
 la justesse des explications : leur relecture reste nécessaire.
+
+Le hook transmet la même règle de langue au début de la tâche et s'il demande
+une reprise. Codex s'appuie sur la conversation et les documents existants ;
+le script ne détecte pas la langue, ne conserve pas la demande et n'a pas besoin
+d'une préférence de langue dans les réglages.
 
 ## Périmètre et limites
 
@@ -79,6 +84,12 @@ Dans un projet jetable, demander une fonction : Codex doit créer le README.
 Changer ensuite son utilisation : le document doit être actualisé. Une simple
 demande d'explication ne doit créer aucun fichier. Les tests Python ne remplacent
 pas cette validation après installation dans Codex.
+
+Pour vérifier les langues dans Codex, demander le même développement en anglais
+et en français dans deux projets sans documentation. Vérifier la langue de
+chaque réponse et de chaque README. Dans un projet documenté en français,
+faire une demande en anglais : la réponse doit être en anglais et la mise à
+jour documentaire en français.
 
 Avant chaque livraison, incrémenter la version de `plugin.json` et décrire
 l'évolution dans `CHANGELOG.md`, selon les règles d'`AGENTS.md`.

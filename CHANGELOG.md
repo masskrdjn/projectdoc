@@ -1,5 +1,12 @@
 # Changements
 
+## 0.2.0 — 5 novembre 2026
+
+- Prise en charge de l'anglais sans sélection manuelle : réponses dans la langue
+  de l'utilisateur et respect de celle des documents existants.
+- Instructions internes et fiche du plugin en anglais ; guides anglais et français.
+- Vérifications en français, en anglais et sur un projet de langue différente.
+
 ## 0.1.1 — 5 novembre 2026
 
 - Installation depuis la marketplace du dépôt GitHub privé.
