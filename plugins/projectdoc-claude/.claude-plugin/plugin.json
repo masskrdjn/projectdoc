@@ -1,6 +1,6 @@
 {
   "name": "projectdoc",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Keep project documentation useful, accessible and current after development in Claude Code.",
   "repository": "https://github.com/masskrdjn/projectdoc",
   "author": {

@@ -118,6 +118,12 @@ Git exclusions, and checks with English and French requests.
 An isolated installation of version 0.2.1 confirmed that Codex detects both
 hooks. A full run in the desktop app still needs to be checked after approval.
 
+To check the desktop workflow, follow the [Codex installation steps](../README.en.md#install-in-codex)
+and approve the hooks. In a disposable project, request a new function and
+check that Codex creates a README. Then request a change to how the function
+is used and check that Codex updates the README. A request for an explanation
+should leave the project files untouched.
+
 To check the skill's scope, prepare three independent changes before starting
 a new chat: a staged PDF change, an unstaged mail change, and an untracked
 classification file. Make the mail and classification docs accurate and the
@@ -142,8 +148,10 @@ Then make an English request in a project with French docs: the reply should be
 in English and the documentation update in French. Python tests check the hook
 logic; they do not verify how Codex writes the resulting documents.
 
-Before each release, increment the version in the manifest and record the
-change in `CHANGELOG.md` as described in `AGENTS.md`. Keep both guides aligned.
+Before each release, increment the version in both manifests
+(`.codex-plugin/plugin.json` and `plugins/projectdoc-claude/.claude-plugin/plugin.json`).
+Record the change in the [changelog](../CHANGELOG.md) as described in
+[AGENTS.md](../AGENTS.md). Keep both guides aligned.
 
 References: [Codex hooks](https://developers.openai.com/codex/hooks),
 [plugin format](https://developers.openai.com/plugins/build/plugins), and

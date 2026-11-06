@@ -134,8 +134,8 @@ Avec la version 0.2.1, une installation isolée a confirmé que Codex détecte l
 deux hooks. Leur déroulement complet dans l'application reste à vérifier après
 leur approbation.
 
-Pour vérifier dans l'application, installer le plugin depuis la marketplace
-GitHub comme indiqué dans le README et approuver les hooks.
+Pour vérifier dans l'application, suivre l’[installation dans Codex](../README.md#installation-dans-codex)
+et approuver les hooks.
 Dans un projet jetable, demander une fonction : Codex doit créer le README.
 Changer ensuite son utilisation : le document doit être actualisé. Une simple
 demande d'explication ne doit créer aucun fichier. Les tests Python ne remplacent
@@ -166,8 +166,10 @@ chaque réponse et de chaque README. Dans un projet documenté en français,
 faire une demande en anglais : la réponse doit être en anglais et la mise à
 jour documentaire en français.
 
-Avant chaque livraison, incrémenter la version du manifeste et décrire
-l'évolution dans `CHANGELOG.md`, selon les règles d'`AGENTS.md`.
+Avant chaque livraison, incrémenter la version dans les deux manifestes
+(`.codex-plugin/plugin.json` et `plugins/projectdoc-claude/.claude-plugin/plugin.json`).
+Décrire l’évolution dans le [journal des changements](../CHANGELOG.md) selon
+les règles d’[AGENTS.md](../AGENTS.md).
 
 Les contrats utilisés viennent des [hooks Codex](https://developers.openai.com/codex/hooks),
 du [format des plugins](https://developers.openai.com/plugins/build/plugins) et

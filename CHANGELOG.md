@@ -1,5 +1,10 @@
 # Changements
 
+## 0.4.1 — 6 novembre 2026
+
+- Les guides de maintenance indiquent les deux manifestes à mettre à jour
+  avant livraison et décrivent le même scénario de vérification dans Codex.
+
 ## 0.4.0 — 6 novembre 2026
 
 - Sur un dépôt documenté et propre, la revue autonome vérifie le parcours de
