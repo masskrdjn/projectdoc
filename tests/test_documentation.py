@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import unittest
 import uuid
 from unittest.mock import patch
@@ -47,6 +48,46 @@ class DocumentationTests(unittest.TestCase):
 
     def assert_blocked(self):
         self.assertEqual(self.call("Stop")["decision"], "block")
+
+    def test_claude_plugin_copies_are_in_sync(self):
+        plugin = ROOT / "plugins/projectdoc-claude"
+        for name in ("hooks/documentation.py", "skills/maintain-project-docs/SKILL.md"):
+            with self.subTest(name=name):
+                self.assertEqual((ROOT / name).read_bytes(), (plugin / name).read_bytes())
+
+    def test_claude_hook_turns_without_turn_id(self):
+        subprocess.run(["git", "init", "-q", str(self.root)], check=True)
+        plugin = ROOT / "plugins/projectdoc-claude"
+        env = {
+            **os.environ,
+            "CLAUDE_PLUGIN_DATA": str(self.temp / "claude-state"),
+            "PROJECTDOC_DEBUG": "0",
+        }
+
+        def call(name, **extra):
+            result = subprocess.run(
+                [sys.executable, str(plugin / "hooks/documentation.py"), "--claude"],
+                input=json.dumps({
+                    "cwd": str(self.root),
+                    "session_id": "claude-session",
+                    "hook_event_name": name,
+                    **extra,
+                }),
+                text=True, capture_output=True, check=True, env=env,
+            )
+            return json.loads(result.stdout) if result.stdout else {}
+
+        context = call("UserPromptSubmit")["hookSpecificOutput"]
+        self.assertEqual(context["hookEventName"], "UserPromptSubmit")
+        self.assertIn((plugin / "skills").as_posix(), context["additionalContext"])
+        self.write("main.py", "print('hello')")
+        self.assertEqual(call("Stop")["decision"], "block")
+        self.assertEqual(call("Stop", stop_hook_active=True), {})
+        self.assertNotIn("decision", call("Stop"))
+
+        call("UserPromptSubmit")
+        self.assertEqual(call("Stop"), {})
+        self.assertEqual(list((self.temp / "claude-state/turns").glob("*.json")), [])
 
     def test_read_only_needs_no_documents(self):
         self.start()

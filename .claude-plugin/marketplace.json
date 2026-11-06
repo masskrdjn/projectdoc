@@ -1,0 +1,13 @@
+{
+  "name": "projectdoc",
+  "owner": {
+    "name": "masskrdjn"
+  },
+  "plugins": [
+    {
+      "name": "projectdoc",
+      "source": "./plugins/projectdoc-claude"
+    }
+  ],
+  "description": "ProjectDoc for Claude Code."
+}

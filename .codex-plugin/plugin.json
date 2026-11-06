@@ -1,6 +1,6 @@
 {
   "name": "projectdoc",
-  "version": "0.2.3",
+  "version": "0.4.0",
   "repository": "https://github.com/masskrdjn/projectdoc",
   "description": "Keep project documentation useful, accessible and current after development in Codex.",
   "skills": "./skills/",

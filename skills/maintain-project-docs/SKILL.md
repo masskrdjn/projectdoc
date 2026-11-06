@@ -52,13 +52,13 @@ configuration and entry points to identify its purpose, main components and
 workflows. Create a root README covering prerequisites, setup and ordinary
 usage. Add detail pages where needed.
 
-For a project with existing reader documentation and no explicit scope, review
-all pending Git changes, including changes already present before the request.
-Use `git status --short --untracked-files=all`
-to inventory them, `git diff` and `git diff --cached` to inspect unstaged and
-staged changes, and read relevant non-ignored untracked files directly.
-The current branch name does not narrow the review. With a clean working tree,
-review the current documentation against the project; only use commit history
+For a documented project with no explicit scope, use
+`git status --short --untracked-files=all` to check for pending changes. If the
+tree is clean, follow the clean-tree review below. Otherwise review all pending
+changes, including those already present before the request. Use `git diff`
+and `git diff --cached` to inspect unstaged and staged changes, and read relevant
+non-ignored untracked files directly.
+The current branch name does not narrow the review. Only use commit history
 as a review range when the user asks for it.
 
 Before editing, group the changes by behavior and check the existing docs for
@@ -69,6 +69,32 @@ groups just to show activity. Leave the underlying changes alone.
 Before finishing, account for every group in scope: say what you updated, what
 needed no update and why, and what you could not verify. Editing one page does
 not complete the review if other groups still need to be checked.
+
+### Review a documented project with a clean working tree
+
+When no scope is given, follow the path a newcomer would take from the README
+or other entry point. Check how to start and, where relevant, how the main
+components work together, how important workflows behave, and how to choose
+the right validation steps.
+
+If there is a technical documentation collection, read a small sample of
+pages relevant to that path, including guides and dated reports when both
+exist. Check whether someone can find those pages from the entry point or
+index. Compare key claims with current entry points, configuration, tests or
+release notes. Distinguish maintained guidance from historical evidence by
+checking which behavior or release each page describes.
+
+Choose the smallest useful update for each gap. Clarify the entry point for
+setup or navigation, link to an accurate guide, update the existing page that
+owns the topic, or add a guide if the existing material cannot fill the gap.
+Preserve dated reports as records of what was checked at the time.
+
+In the final summary, name the pages sampled, explain what they cover for
+handover and where gaps or uncertainties remain, and give the reason for each
+edit location or for leaving the docs as they are. Report the coverage even
+when no new page is needed.
+
+### Development and hook reminders
 
 When this skill is loaded for a development task or a hook reminder, review the
 documentation affected by that task. Unrelated pending work is outside that
@@ -82,7 +108,7 @@ review unless the user includes it.
   further help. A single page is enough for a simple project.
 - Use docs/ when a topic needs a separate page. Link each page from the README
   or an index and provide a route back. Prefer versioned relative links.
-- Use AGENTS.md for Codex instructions and .agents/ for agent resources.
+- Use AGENTS.md for Codex instructions and CLAUDE.md for Claude Code instructions.
 - For handover, include the essential commands, settings, and dependencies.
   Explain maintenance decisions or limitations when they are otherwise unclear.
 
@@ -105,6 +131,6 @@ Render diagrams using the project's existing tools if available; otherwise
 mention that rendering was not verified. Do not copy secrets or personal data.
 Do not publish documents or change sharing permissions.
 
-The hook reminds Codex to review documentation and compares file changes.
+The hook reminds the assistant to review documentation and compares file changes.
 It cannot judge the text. If it requests a continuation, complete the review
 and finish, mentioning any actual limits.

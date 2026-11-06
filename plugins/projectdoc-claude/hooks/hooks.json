@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"${CLAUDE_PLUGIN_ROOT}/hooks/documentation.py\" --claude",
+            "timeout": 20,
+            "statusMessage": "Checking project documentation"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"${CLAUDE_PLUGIN_ROOT}/hooks/documentation.py\" --claude",
+            "timeout": 20,
+            "statusMessage": "Checking documentation after development"
+          }
+        ]
+      }
+    ]
+  }
+}

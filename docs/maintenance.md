@@ -18,7 +18,25 @@ de petits programmes lancés pour rappeler les consignes et contrôler les oubli
 | `hooks/documentation.py` | Comparaison des fichiers et demande de vérification. |
 | `tests/test_documentation.py` | Vérifications du comportement des hooks. |
 
-## Fonctionnement
+## Variante Claude Code
+
+Le catalogue `.claude-plugin/marketplace.json` installe le sous-dossier
+`plugins/projectdoc-claude/`. Ce sous-dossier contient le manifeste et les hooks
+Claude Code, ainsi qu'une copie du script et du skill partagés. Modifier ces deux
+fichiers à la racine, puis lancer `python scripts/sync_claude_plugin.py`. Les
+tests vérifient que les copies sont à jour.
+
+Claude Code remplace l'état de référence à chaque demande, puis le consomme au
+contrôle de fin. L'état est isolé par projet et session dans
+`CLAUDE_PLUGIN_DATA/turns/`, ou dans le dossier temporaire `claude-projectdoc/turns/`.
+
+Depuis la racine, valider le catalogue avec `claude plugin validate .` et tester
+le chargement local avec `claude --plugin-dir ./plugins/projectdoc-claude`.
+Dans un projet jetable, vérifier les deux événements dans `/hooks`, demander une
+modification de code puis vérifier que la demande de revue intervient au plus
+une fois. Voir la [référence des hooks Claude Code](https://code.claude.com/docs/en/hooks).
+
+## Fonctionnement dans Codex
 
 Au début d'une demande (`UserPromptSubmit`), le programme garde une empreinte des
 fichiers : une valeur calculée qui change si le contenu change. Il donne aussi à
@@ -50,6 +68,13 @@ Git : modifications indexées, modifications non indexées et fichiers non
 suivis que Git n'ignore pas. Codex identifie les comportements concernés et
 explique pour chacun ce qui a été mis à jour ou pourquoi il n'y avait rien à
 changer. Si l'utilisateur nomme un chantier, la revue s'y limite.
+
+Avec un arbre Git propre et sans périmètre explicite, le skill suit le parcours
+de reprise depuis le README. Il vérifie la prise en main, les composants et
+parcours importants et les moyens de les valider. S'il existe des pages
+techniques, il en lit un échantillon et vérifie lesquelles décrivent encore le
+projet actuel. Le bilan indique les pages lues, leur couverture, les limites et
+les raisons de modifier, relier ou conserver les pages.
 
 Le hook `Stop` reste un rappel pour les changements intervenus pendant le
 tour. Il ne vérifie pas que les pages modifiées couvrent tous les comportements
@@ -123,6 +148,17 @@ Prévoir une documentation exacte pour les mails et le classement, mais périmé
 pour les PDF. Invoquer le skill seul : il doit corriger la doc PDF et rendre
 compte des trois chantiers. Répéter sur une copie en demandant une revue limitée
 aux PDF : seuls les PDF doivent entrer dans le bilan.
+
+Pour rejouer le cas CodeSlice AI, préparer une copie de test propre au commit
+`5f15453` (version 1.6.0) et invoquer le skill seul, sans nommer de fichier.
+Le scénario réussit si le bilan cite des pages techniques effectivement lues,
+situe l'audit du harnais 1.5.0 par rapport au flux d'édition 1.6.0 et évalue
+l'accès aux explications sur l'architecture, l'édition et la validation.
+Vérifier qu'il distingue les tests Node, les vérifications dans VS Code, les
+simulations hors ligne et les évaluations avec un fournisseur réel. Le bilan
+doit justifier chaque emplacement modifié ou expliquer pourquoi les pages
+existantes suffisent. La création d'un fichier est facultative. Ce scénario
+manuel évalue le suivi des consignes du skill.
 
 Pour vérifier les langues dans Codex, demander le même développement en anglais
 et en français dans deux projets sans documentation. Vérifier la langue de

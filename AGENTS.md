@@ -2,8 +2,8 @@
 
 ## Règles de code
 
-- Cibler Codex uniquement et préserver les formats de plugins et de hooks pris
-  en charge. Éviter les dépendances externes quand la bibliothèque Python suffit.
+- Préserver les formats de plugins et de hooks propres à Codex et Claude Code.
+  Éviter les dépendances externes quand la bibliothèque Python suffit.
 - Écrire des fonctions courtes, avec des noms explicites. Commenter les raisons
   et les limites utiles plutôt que paraphraser le code.
 - Préserver les fichiers et les changements existants. Ne jamais enregistrer de
@@ -16,7 +16,7 @@
 ## Version et livraison
 
 Après chaque développement livré, y compris une évolution des instructions ou
-de la documentation, incrémenter la version dans `.codex-plugin/plugin.json` avant le commit.
+de la documentation, incrémenter la version dans les deux manifestes de plugin avant le commit.
 Utiliser `MAJEURE.MINEURE.CORRECTIF` : correctif pour une correction ou de la
 documentation, mineure pour une fonctionnalité compatible, majeure pour une
 rupture de compatibilité. Un lot cohérent de changements reçoit une seule version.
@@ -30,7 +30,10 @@ sans dépendre d'un chemin local sur le poste de développement.
 
 ## Documentation et garanties
 
-ProjectDoc cible Codex uniquement. La documentation destinée aux personnes commence
+Le plugin Codex vit à la racine. La variante Claude Code vit dans
+`plugins/projectdoc-claude/`. Après une modification du script ou du skill partagé,
+exécuter `python scripts/sync_claude_plugin.py`.
+La documentation destinée aux personnes commence
 dans README.md ; les détails utiles vont dans docs/. À chaque développement,
 appliquer skills/maintain-project-docs/SKILL.md : créer la documentation absente ou
 actualiser les explications affectées. Rester bref et compréhensible sans connaître

@@ -2,13 +2,14 @@
 
 [English](README.en.md) · Français
 
-ProjectDoc aide Codex à garder une documentation courte et utile au fil du
+ProjectDoc aide Codex et Claude Code à garder une documentation courte et utile au fil du
 développement. Il la crée si elle manque et actualise les explications concernées
 si elle existe déjà. Une personne qui découvre ou reprend le projet doit pouvoir
 comprendre son but et commencer sans lire tout le code.
 
-Ce plugin cible uniquement Codex. Son installation se fait depuis le dépôt
-GitHub privé [masskrdjn/projectdoc](https://github.com/masskrdjn/projectdoc).
+ProjectDoc est disponible pour Codex et Claude Code depuis le dépôt GitHub privé
+[masskrdjn/projectdoc](https://github.com/masskrdjn/projectdoc).
+Voir [l'installation dans Claude Code](#installation-dans-claude-code).
 
 ## Installation dans Codex
 
@@ -37,6 +38,21 @@ Le plugin installé est une copie du dépôt : après une nouvelle version, mett
 à jour la marketplace et le plugin par le gestionnaire de plugins, redémarrer
 Codex et approuver à nouveau les hooks si leur contenu a changé.
 
+## Installation dans Claude Code
+
+Il faut Claude Code, Git avec accès au dépôt privé et Python 3.10 ou plus
+accessible via `python`. Après publication de la variante Claude Code sur GitHub,
+exécuter ces commandes depuis un terminal :
+
+```powershell
+claude plugin marketplace add masskrdjn/projectdoc
+claude plugin install projectdoc@projectdoc
+```
+
+Dans une session Claude Code, utiliser `/reload-plugins` pour charger le plugin
+et `/hooks` pour vérifier que ProjectDoc fournit les deux contrôles. Pour lancer
+une revue documentaire à la demande, utiliser `/projectdoc:maintain-project-docs`.
+
 ## Pendant une tâche
 
 1. Codex reçoit les consignes et repère la documentation avant de développer.
@@ -58,7 +74,9 @@ Pour une revue documentaire autonome, invoquez le skill
 `maintain-project-docs` dans Codex. Sans périmètre indiqué, il examine le projet
 entier si celui-ci est dépourvu de documentation et crée son README. Si une documentation
 existe, il examine les changements Git en cours et rend compte de chaque
-chantier. Nommez un chantier ou un fichier pour limiter la revue.
+chantier. Avec un arbre Git propre, il vérifie le parcours de prise en main
+et lit un échantillon des pages techniques lorsqu'elles existent. Nommez un
+chantier ou un fichier pour limiter la revue.
 
 Si aucune vérification n'apparaît, consultez **Réglages > Hooks** dans Codex,
 puis suivez le [diagnostic des hooks](docs/maintenance.md#diagnostiquer-les-hooks).

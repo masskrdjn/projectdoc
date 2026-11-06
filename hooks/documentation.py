@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Codex hooks: capture a turn baseline, then request one documentation review.
+"""ProjectDoc hooks: capture a turn baseline, then request one documentation review.
 
 No model calls, source writes, transcript parsing, or network access.
-Only file names and content hashes are persisted in PLUGIN_DATA.
+The baseline contains file names, content hashes and bookkeeping only.
 """
 
 from __future__ import annotations
@@ -67,7 +67,7 @@ def project_root(cwd: Path) -> tuple[Path, bool]:
 def is_doc(name: str) -> bool:
     path = Path(name)
     # Instructions are executable plugin/agent inputs, not reader documentation.
-    if path.name.lower() in {"agents.md", "agents.override.md", "skill.md"}:
+    if path.name.lower() in {"agents.md", "agents.override.md", "claude.md", "claude.local.md", "skill.md"}:
         return False
     if any(part.startswith(".") or part == "skills" for part in path.parts[:-1]):
         return False
@@ -125,14 +125,22 @@ def snapshot(root: Path, use_git: bool) -> dict:
     return result
 
 
-def state_path(event: dict, root: Path) -> Path:
+def state_path(event: dict, root: Path, *, claude: bool = False) -> Path:
     session = event.get("session_id")
     turn = event.get("turn_id")
     if not isinstance(session, str) or not session:
         raise CheckUnavailable("missing session_id")
-    if not isinstance(turn, str) or not turn:
-        raise CheckUnavailable("missing turn_id")
-    base = Path(os.environ.get("PLUGIN_DATA") or (Path(tempfile.gettempdir()) / "codex-projectdoc"))
+    if claude:
+        # Claude Code replaces the baseline at each prompt in the same session.
+        turn = None
+        data_variable = "CLAUDE_PLUGIN_DATA"
+        temp_name = "claude-projectdoc"
+    else:
+        if not isinstance(turn, str) or not turn:
+            raise CheckUnavailable("missing turn_id")
+        data_variable = "PLUGIN_DATA"
+        temp_name = "codex-projectdoc"
+    base = Path(os.environ.get(data_variable) or (Path(tempfile.gettempdir()) / temp_name))
     base = base / "turns"
     base.mkdir(parents=True, exist_ok=True)
     if base.is_symlink() or (hasattr(base, "is_junction") and base.is_junction()):
@@ -158,13 +166,13 @@ def context(message: str) -> dict:
 
 
 def outcome(name: str, status: str, output: dict | None = None) -> dict | None:
-    # Use Codex's own event stream; never write the event payload to a log.
+    # Use the host's own event stream; never write the event payload to a log.
     if os.environ.get("PROJECTDOC_DEBUG") == "1":
         return {**(output or {}), "systemMessage": f"ProjectDoc [{name}]: {status}."}
     return output
 
 
-def handle(event: dict) -> dict | None:
+def handle(event: dict, *, claude: bool = False) -> dict | None:
     name = event.get("hook_event_name")
     if name not in {"UserPromptSubmit", "Stop"}:
         return {"systemMessage": "ProjectDoc: unsupported hook event; check not performed."}
@@ -175,8 +183,10 @@ def handle(event: dict) -> dict | None:
         if not isinstance(cwd, str) or not cwd or not Path(cwd).is_dir():
             raise CheckUnavailable("missing or invalid cwd")
         root, use_git = project_root(Path(cwd))
-        path = state_path(event, root)
+        path = state_path(event, root, claude=claude)
         if name == "UserPromptSubmit":
+            if claude:
+                path.unlink(missing_ok=True)
             before = snapshot(root, use_git)
             save(path, {"before": before, "created": time.time(), "blocked": False})
             return outcome(name, "baseline saved", context(CONTEXT))
@@ -189,13 +199,16 @@ def handle(event: dict) -> dict | None:
             return outcome(name, "review already requested")
         after = snapshot(root, use_git)
         before = state["before"]
+        if claude:
+            path.unlink()
         if before["code"] == after["code"]:
             return outcome(name, "no project file changes")
         if after["readable_docs"] and before["docs"] != after["docs"]:
             return outcome(name, "documentation changed")
         # Once per turn, even if a runtime omits stop_hook_active on continuation.
-        state["blocked"] = True
-        save(path, state)
+        if not claude:
+            state["blocked"] = True
+            save(path, state)
         return outcome(name, "documentation review requested", {"decision": "block", "reason": (
             "ProjectDoc: project files changed during this task without a detected "
             "documentation update. Read the skill at " + SKILL.as_posix() +
@@ -222,7 +235,7 @@ def main() -> int:
         event = json.loads(raw)
         if not isinstance(event, dict):
             raise ValueError("invalid event")
-        output = handle(event)
+        output = handle(event, claude=sys.argv[1:] == ["--claude"])
     except (ValueError, TypeError):
         output = {"systemMessage": "ProjectDoc: invalid event; check not performed."}
     if output:

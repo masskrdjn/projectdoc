@@ -2,13 +2,14 @@
 
 English · [Français](README.md)
 
-ProjectDoc helps Codex keep project documentation short and useful. It creates
+ProjectDoc helps Codex and Claude Code keep project documentation short and useful. It creates
 missing documentation and updates affected explanations as the project changes.
 Someone new to the project can see what it does and how to get started without
 reading the code first.
 
-ProjectDoc is for Codex. Install it from the private GitHub repository
-[masskrdjn/projectdoc](https://github.com/masskrdjn/projectdoc).
+ProjectDoc supports Codex and Claude Code. Both plugins are distributed from the
+private GitHub repository [masskrdjn/projectdoc](https://github.com/masskrdjn/projectdoc).
+See [installation in Claude Code](#install-in-claude-code).
 
 ## Install in Codex
 
@@ -33,6 +34,21 @@ These steps follow the [official Codex plugin guide](https://developers.openai.c
 For a new version, update the marketplace and plugin in the plugin manager,
 restart Codex, and approve the hooks again if they changed.
 
+## Install in Claude Code
+
+You need Claude Code, Git with access to the private repository, and Python 3.10
+or later available as `python`. Once the Claude Code plugin is published to
+GitHub, run these commands in a terminal:
+
+```powershell
+claude plugin marketplace add masskrdjn/projectdoc
+claude plugin install projectdoc@projectdoc
+```
+
+In a Claude Code session, use `/reload-plugins` to load the plugin and `/hooks` to
+check that ProjectDoc supplies both hooks. For a standalone documentation review,
+run `/projectdoc:maintain-project-docs`.
+
 ## Use ProjectDoc
 
 Ask Codex in English or French. No language setting is needed. Codex replies in
@@ -52,7 +68,8 @@ For a standalone documentation review, invoke the `maintain-project-docs`
 skill directly. With no specified scope, it covers the whole project and
 creates a README if there is no documentation. If documentation already
 exists, it reviews pending Git changes and reports on each area of work.
-Name a feature or file to limit the review.
+With a clean working tree, it checks the handover path and reads a sample of
+technical pages where available. Name a feature or file to limit the review.
 
 If no check appears, open **Settings > Hooks** in Codex and follow the
 [hook troubleshooting steps](docs/maintenance.en.md#troubleshoot-the-hooks).

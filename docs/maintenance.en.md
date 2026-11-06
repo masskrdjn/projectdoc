@@ -16,7 +16,25 @@ that Codex runs during a task, remind it of the rules and check for omissions.
 | `hooks/documentation.py` | File comparison and review requests. |
 | `tests/test_documentation.py` | Tests for hook behavior. |
 
-## How the checks work
+## Claude Code plugin
+
+The catalog at `.claude-plugin/marketplace.json` installs the
+`plugins/projectdoc-claude/` directory. That directory contains the Claude Code
+manifest and hook configuration, plus copies of the shared script and skill.
+Edit the originals at the repository root and run
+`python scripts/sync_claude_plugin.py`. The tests check that the copies match.
+
+Claude Code replaces the baseline at each prompt and consumes it at the stop
+check. State is scoped to the project and session in `CLAUDE_PLUGIN_DATA/turns/`
+or the temporary `claude-projectdoc/turns/` directory.
+
+From the repository root, validate the catalog with `claude plugin validate .`
+and load the local plugin with `claude --plugin-dir ./plugins/projectdoc-claude`.
+In a disposable project, check both events in `/hooks`, request a code change,
+and check that the plugin asks for a review at most once. See the
+[Claude Code hooks reference](https://code.claude.com/docs/en/hooks).
+
+## How the Codex checks work
 
 At the start of a request (`UserPromptSubmit`), the first hook records file
 fingerprints: values that change when file contents change. It gives Codex the
@@ -43,6 +61,13 @@ staged changes, unstaged changes, and untracked files Git does not ignore.
 Codex identifies the affected behaviors and explains what it updated or why
 no update was needed for each one. If the user names a specific area, the
 review stays within it.
+
+With a clean working tree and no explicit scope, the skill follows the
+handover path from the README. It checks setup, key components and workflows,
+and how to validate them. Where technical pages exist, it reads a sample and
+checks which pages still describe the current project. The summary names the
+pages read, what they cover, any limits, and why pages were edited, linked,
+or left as they were.
 
 The `Stop` hook remains a reminder for changes made during the turn. It does
 not verify that the edited pages cover every affected behavior.
@@ -99,6 +124,16 @@ classification file. Make the mail and classification docs accurate and the
 PDF docs outdated. Invoke the skill on its own: it should fix the PDF docs and
 report on all three areas. Repeat on a copy with a request limited to PDFs:
 only PDFs should be in the review summary.
+
+To replay the CodeSlice AI case, prepare a clean test copy at commit
+`5f15453` (version 1.6.0) and invoke the skill on its own without naming a file.
+The scenario passes if the summary cites technical pages the assistant read,
+places the 1.5.0 harness audit in the context of the 1.6.0 editing workflow,
+and assesses how readers find guidance on architecture, editing, and validation.
+Check that it distinguishes Node tests, checks in VS Code, offline simulations,
+and evaluations with a real provider. The summary should explain each edit
+location or why the existing pages are sufficient. Creating a file is optional.
+This manual scenario checks whether the assistant follows the skill.
 
 To check language behavior in Codex, install the plugin and approve its hooks.
 Request the same small change in English and French in two projects without

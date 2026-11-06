@@ -1,5 +1,18 @@
 # Changements
 
+## 0.4.0 — 6 novembre 2026
+
+- Sur un dépôt documenté et propre, la revue autonome vérifie le parcours de
+  reprise technique. Elle lit des pages représentatives, distingue guides
+  actuels et rapports datés et explique où intervenir ou pourquoi conserver
+  la documentation telle quelle.
+
+## 0.3.0 — 5 novembre 2026
+
+- Ajout du plugin Claude Code et de son catalogue dans le même dépôt. Le skill
+  et le contrôle documentaire sont partagés. Claude Code remplace son état de
+  référence à chaque demande dans la session.
+
 ## 0.2.3 — 5 novembre 2026
 
 - Sur un projet sans documentation, une revue autonome sans périmètre explicite
