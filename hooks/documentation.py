@@ -48,6 +48,15 @@ CONTEXT = (
     "change: explain that briefly. Read-only tasks require no new files. "
     + LANGUAGE_POLICY
 )
+REVIEW_REASON = (
+    "ProjectDoc: project files changed during this task without a detected "
+    "documentation update. Read the skill at " + SKILL.as_posix() +
+    ". Review documentation now; create it if missing (README.md by default), "
+    "or update only affected explanations. If existing documents remain "
+    "accurate, briefly explain why no update is needed. Do not make "
+    "artificial edits. Then finish; this check will not request a second "
+    "continuation. " + LANGUAGE_POLICY
+)
 
 
 def git(root: Path, *args: str) -> bytes:
@@ -67,7 +76,9 @@ def project_root(cwd: Path) -> tuple[Path, bool]:
 def is_doc(name: str) -> bool:
     path = Path(name)
     # Instructions are executable plugin/agent inputs, not reader documentation.
-    if path.name.lower() in {"agents.md", "agents.override.md", "claude.md", "claude.local.md", "skill.md"}:
+    if path.name.lower() in {
+        "agents.md", "agents.override.md", "claude.md", "claude.local.md", "gemini.md", "skill.md"
+    }:
         return False
     if any(part.startswith(".") or part == "skills" for part in path.parts[:-1]):
         return False
@@ -125,21 +136,32 @@ def snapshot(root: Path, use_git: bool) -> dict:
     return result
 
 
-def state_path(event: dict, root: Path, *, claude: bool = False) -> Path:
-    session = event.get("session_id")
-    turn = event.get("turn_id")
-    if not isinstance(session, str) or not session:
-        raise CheckUnavailable("missing session_id")
-    if claude:
-        # Claude Code replaces the baseline at each prompt in the same session.
+def state_path(
+    event: dict, root: Path, *, claude: bool = False, antigravity: bool = False
+) -> Path:
+    if antigravity:
+        session = event.get("conversationId")
+        if not isinstance(session, str) or not session:
+            raise CheckUnavailable("missing conversationId")
+        # Antigravity scopes turns by conversation; Stop clears the state file.
         turn = None
-        data_variable = "CLAUDE_PLUGIN_DATA"
-        temp_name = "claude-projectdoc"
-    else:
-        if not isinstance(turn, str) or not turn:
-            raise CheckUnavailable("missing turn_id")
         data_variable = "PLUGIN_DATA"
-        temp_name = "codex-projectdoc"
+        temp_name = "antigravity-projectdoc"
+    else:
+        session = event.get("session_id")
+        turn = event.get("turn_id")
+        if not isinstance(session, str) or not session:
+            raise CheckUnavailable("missing session_id")
+        if claude:
+            # Claude Code replaces the baseline at each prompt in the same session.
+            turn = None
+            data_variable = "CLAUDE_PLUGIN_DATA"
+            temp_name = "claude-projectdoc"
+        else:
+            if not isinstance(turn, str) or not turn:
+                raise CheckUnavailable("missing turn_id")
+            data_variable = "PLUGIN_DATA"
+            temp_name = "codex-projectdoc"
     base = Path(os.environ.get(data_variable) or (Path(tempfile.gettempdir()) / temp_name))
     base = base / "turns"
     base.mkdir(parents=True, exist_ok=True)
@@ -165,6 +187,10 @@ def context(message: str) -> dict:
     return {"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": message}}
 
 
+def antigravity_context(message: str) -> dict:
+    return {"injectSteps": [{"systemMessage": {"systemMessage": message}}]}
+
+
 def outcome(name: str, status: str, output: dict | None = None) -> dict | None:
     # Use the host's own event stream; never write the event payload to a log.
     if os.environ.get("PROJECTDOC_DEBUG") == "1":
@@ -172,7 +198,63 @@ def outcome(name: str, status: str, output: dict | None = None) -> dict | None:
     return output
 
 
-def handle(event: dict, *, claude: bool = False) -> dict | None:
+def handle_antigravity(event: dict) -> dict:
+    name = event.get("hookEventName")
+    if name not in {"PreInvocation", "Stop"}:
+        return {}
+    try:
+        cwd = event.get("cwd")
+        if not isinstance(cwd, str) or not cwd or not Path(cwd).is_dir():
+            raise CheckUnavailable("missing or invalid cwd")
+        root, use_git = project_root(Path(cwd))
+        path = state_path(event, root, antigravity=True)
+        if name == "PreInvocation":
+            # PreInvocation runs before every model call; preserve the turn baseline.
+            if path.is_file() and not path.is_symlink():
+                return {}
+            before = snapshot(root, use_git)
+            save(path, {"before": before, "created": time.time(), "blocked": False})
+            return antigravity_context(CONTEXT)
+        reason = event.get("terminationReason")
+        if isinstance(reason, str) and reason and reason != "NO_TOOL_CALL":
+            path.unlink(missing_ok=True)
+            return {}
+        if event.get("continuationActive") is True:
+            path.unlink(missing_ok=True)
+            return {}
+        if not path.is_file() or path.is_symlink():
+            raise CheckUnavailable("no baseline for this project and conversation")
+        state = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(state, dict):
+            path.unlink(missing_ok=True)
+            raise CheckUnavailable("invalid baseline")
+        if state.get("blocked"):
+            path.unlink(missing_ok=True)
+            return {}
+        after = snapshot(root, use_git)
+        before = state["before"]
+        if before["code"] == after["code"]:
+            path.unlink(missing_ok=True)
+            return {}
+        if after["readable_docs"] and before["docs"] != after["docs"]:
+            path.unlink(missing_ok=True)
+            return {}
+        # Keep the state marked blocked until the continuation's Stop cleans it up.
+        state["blocked"] = True
+        save(path, state)
+        return {"decision": "continue", "reason": REVIEW_REASON}
+    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
+        detail = str(error) if isinstance(error, CheckUnavailable) else "could not read or write check data"
+        warning = (f"ProjectDoc [{name}]: automatic check unavailable ({detail}); review documentation "
+                   "using the skill. No automatic validation was completed. " + LANGUAGE_POLICY)
+        if name == "PreInvocation":
+            return antigravity_context(CONTEXT + "\n" + warning)
+        return {}
+
+
+def handle(event: dict, *, claude: bool = False, antigravity: bool = False) -> dict | None:
+    if antigravity:
+        return handle_antigravity(event)
     name = event.get("hook_event_name")
     if name not in {"UserPromptSubmit", "Stop"}:
         return {"systemMessage": "ProjectDoc: unsupported hook event; check not performed."}
@@ -209,15 +291,7 @@ def handle(event: dict, *, claude: bool = False) -> dict | None:
         if not claude:
             state["blocked"] = True
             save(path, state)
-        return outcome(name, "documentation review requested", {"decision": "block", "reason": (
-            "ProjectDoc: project files changed during this task without a detected "
-            "documentation update. Read the skill at " + SKILL.as_posix() +
-            ". Review documentation now; create it if missing (README.md by default), "
-            "or update only affected explanations. If existing documents remain "
-            "accurate, briefly explain why no update is needed. Do not make "
-            "artificial edits. Then finish; this check will not request a second "
-            "continuation. " + LANGUAGE_POLICY
-        )})
+        return outcome(name, "documentation review requested", {"decision": "block", "reason": REVIEW_REASON})
     except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
         detail = str(error) if isinstance(error, CheckUnavailable) else "could not read or write check data"
         warning = (f"ProjectDoc [{name}]: automatic check unavailable ({detail}); review documentation "
@@ -228,6 +302,7 @@ def handle(event: dict, *, claude: bool = False) -> dict | None:
 
 
 def main() -> int:
+    antigravity = sys.argv[1:] == ["--antigravity"]
     try:
         raw = sys.stdin.buffer.read(1024 * 1024 + 1)
         if len(raw) > 1024 * 1024:
@@ -235,10 +310,14 @@ def main() -> int:
         event = json.loads(raw)
         if not isinstance(event, dict):
             raise ValueError("invalid event")
-        output = handle(event, claude=sys.argv[1:] == ["--claude"])
+        output = handle(
+            event,
+            claude=sys.argv[1:] == ["--claude"],
+            antigravity=antigravity,
+        )
     except (ValueError, TypeError):
-        output = {"systemMessage": "ProjectDoc: invalid event; check not performed."}
-    if output:
+        output = {} if antigravity else {"systemMessage": "ProjectDoc: invalid event; check not performed."}
+    if output is not None:
         print(json.dumps(output, ensure_ascii=True))
     return 0
 

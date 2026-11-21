@@ -2,14 +2,16 @@
 
 English · [Français](README.md)
 
-ProjectDoc helps Codex and Claude Code keep project documentation short and useful. It creates
-missing documentation and updates affected explanations as the project changes.
-Someone new to the project can see what it does and how to get started without
-reading the code first.
+ProjectDoc helps Codex, Claude Code, and Google Antigravity keep project
+documentation short and useful. It creates missing documentation and updates
+affected explanations as the project changes. Someone new to the project can see
+what it does and how to get started without reading the code first.
 
-ProjectDoc supports Codex and Claude Code. Both plugins are distributed from the
-private GitHub repository [masskrdjn/projectdoc](https://github.com/masskrdjn/projectdoc).
-See [installation in Claude Code](#install-in-claude-code).
+ProjectDoc supports Codex, Claude Code, and Antigravity. All three variants are
+distributed from the private GitHub repository
+[masskrdjn/projectdoc](https://github.com/masskrdjn/projectdoc).
+See [Install in Claude Code](#install-in-claude-code) and
+[Install in Antigravity](#install-in-antigravity).
 
 ## Install in Codex
 
@@ -49,6 +51,20 @@ In a Claude Code session, use `/reload-plugins` to load the plugin and `/hooks` 
 check that ProjectDoc supplies both hooks. For a standalone documentation review,
 run `/projectdoc:maintain-project-docs`.
 
+## Install in Antigravity
+
+You need Google Antigravity (`agy`), Git with access to the private repository,
+and Python 3.10 or later available as `python`. From a terminal, install the
+native plugin:
+
+```powershell
+agy plugin install https://github.com/masskrdjn/projectdoc
+```
+
+Antigravity loads `.antigravity-plugin/plugin.json`, the `maintain-project-docs`
+skill, and the hooks from `hooks.json` (`PreInvocation` and `Stop`). Invoke the
+`maintain-project-docs` skill directly for a standalone documentation review.
+
 ## Use ProjectDoc
 
 Ask Codex in English or French. No language setting is needed. Codex replies in
@@ -83,7 +99,8 @@ ProjectDoc uses your existing layout. For a new project, it starts here:
 | `README.md` | Project purpose, quick start, and links. |
 | `docs/` | Details that need their own page. |
 | `docs/assets/` | SVG diagrams, when useful. |
-| `AGENTS.md` and `.agents/` | Instructions and resources for Codex. |
+| `AGENTS.md` and `.agents/` | Instructions and resources for Codex or Antigravity. |
+| `CLAUDE.md` / `GEMINI.md` | Instructions specific to Claude Code or Antigravity. |
 
 Every page should be reachable from the README. Mermaid or SVG diagrams are
 optional. Use them where they help, with a short explanation in text.

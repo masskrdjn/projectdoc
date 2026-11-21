@@ -1,5 +1,14 @@
 # Changements
 
+## 0.5.0 — 21 novembre 2026
+
+- Prise en charge native de Google Antigravity avec `.antigravity-plugin/plugin.json`,
+  `hooks.json` à la racine et le mode `--antigravity` dans `hooks/documentation.py`
+  (`PreInvocation` avec préservation de la baseline en cours de tour, `Stop` avec
+  `decision: "continue"`, `continuationActive` et nettoyage sur arrêt anormal).
+- Exclusion de `GEMINI.md` de la détection des documents lecteur.
+- Ajout des tests unitaires Antigravity et mise à jour des guides français et anglais.
+
 ## 0.4.1 — 6 novembre 2026
 
 - Les guides de maintenance indiquent les deux manifestes à mettre à jour

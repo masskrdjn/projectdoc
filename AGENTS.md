@@ -16,7 +16,10 @@
 ## Version et livraison
 
 Après chaque développement livré, y compris une évolution des instructions ou
-de la documentation, incrémenter la version dans les deux manifestes de plugin avant le commit.
+de la documentation, incrémenter la version dans les trois manifestes de plugin
+avant le commit (`.codex-plugin/plugin.json`,
+`plugins/projectdoc-claude/.claude-plugin/plugin.json` et
+`.antigravity-plugin/plugin.json`).
 Utiliser `MAJEURE.MINEURE.CORRECTIF` : correctif pour une correction ou de la
 documentation, mineure pour une fonctionnalité compatible, majeure pour une
 rupture de compatibilité. Un lot cohérent de changements reçoit une seule version.

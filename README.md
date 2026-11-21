@@ -2,14 +2,16 @@
 
 [English](README.en.md) · Français
 
-ProjectDoc aide Codex et Claude Code à garder une documentation courte et utile au fil du
-développement. Il la crée si elle manque et actualise les explications concernées
-si elle existe déjà. Une personne qui découvre ou reprend le projet doit pouvoir
-comprendre son but et commencer sans lire tout le code.
+ProjectDoc aide Codex, Claude Code et Google Antigravity à garder une
+documentation courte et utile au fil du développement. Il la crée si elle manque
+et actualise les explications concernées si elle existe déjà. Une personne qui
+découvre ou reprend le projet doit pouvoir comprendre son but et commencer sans
+lire tout le code.
 
-ProjectDoc est disponible pour Codex et Claude Code depuis le dépôt GitHub privé
-[masskrdjn/projectdoc](https://github.com/masskrdjn/projectdoc).
-Voir [l'installation dans Claude Code](#installation-dans-claude-code).
+ProjectDoc est disponible pour Codex, Claude Code et Antigravity depuis le dépôt
+GitHub privé [masskrdjn/projectdoc](https://github.com/masskrdjn/projectdoc).
+Voir [l'installation dans Claude Code](#installation-dans-claude-code) et
+[l'installation dans Antigravity](#installation-dans-antigravity).
 
 ## Installation dans Codex
 
@@ -53,6 +55,20 @@ Dans une session Claude Code, utiliser `/reload-plugins` pour charger le plugin
 et `/hooks` pour vérifier que ProjectDoc fournit les deux contrôles. Pour lancer
 une revue documentaire à la demande, utiliser `/projectdoc:maintain-project-docs`.
 
+## Installation dans Antigravity
+
+Il faut Google Antigravity (`agy`), Git avec accès au dépôt privé et Python 3.10
+ou plus accessible via `python`. Depuis un terminal, installer le plugin natif :
+
+```powershell
+agy plugin install https://github.com/masskrdjn/projectdoc
+```
+
+Antigravity charge `.antigravity-plugin/plugin.json`, le skill
+`maintain-project-docs` et les hooks de `hooks.json` (`PreInvocation` et `Stop`).
+Pour lancer une revue documentaire à la demande, invoquer le skill
+`maintain-project-docs`.
+
 ## Pendant une tâche
 
 1. Codex reçoit les consignes et repère la documentation avant de développer.
@@ -90,7 +106,8 @@ ProjectDoc respecte les emplacements existants. Pour un nouveau projet :
 | `README.md` | À quoi sert le projet, comment commencer et où poursuivre. |
 | `docs/` | Les explications qui méritent une page séparée, si nécessaire. |
 | `docs/assets/` | Les schémas SVG, si nécessaire. |
-| `AGENTS.md` et `.agents/` | Les consignes et ressources de Codex. |
+| `AGENTS.md` et `.agents/` | Les consignes et ressources de Codex ou Antigravity. |
+| `CLAUDE.md` / `GEMINI.md` | Les consignes spécifiques à Claude Code ou Antigravity. |
 
 Chaque page doit être accessible depuis l'accueil. Les schémas Mermaid ou SVG
 restent facultatifs : on les ajoute s'ils facilitent la compréhension, avec une

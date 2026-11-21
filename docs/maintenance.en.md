@@ -8,10 +8,12 @@ that Codex runs during a task, remind it of the rules and check for omissions.
 | File | Purpose |
 | --- | --- |
 | `.codex-plugin/plugin.json` | Codex manifest: plugin name, version, and components. |
+| `.antigravity-plugin/plugin.json` | Antigravity manifest: plugin name, version, and suggested prompts. |
 | `.agents/plugins/marketplace.json` | Plugin catalog supplied by the GitHub repository. |
 | `AGENTS.md` | Coding, documentation, and version rules. |
 | `CHANGELOG.md` | Changes by version. |
 | `skills/maintain-project-docs/SKILL.md` | Writing and layout rules. |
+| `hooks.json` | When Antigravity runs the checks (`PreInvocation`, `Stop`). |
 | `hooks/hooks.json` | When Codex runs the checks. |
 | `hooks/documentation.py` | File comparison and review requests. |
 | `tests/test_documentation.py` | Tests for hook behavior. |
@@ -33,6 +35,26 @@ and load the local plugin with `claude --plugin-dir ./plugins/projectdoc-claude`
 In a disposable project, check both events in `/hooks`, request a code change,
 and check that the plugin asks for a review at most once. See the
 [Claude Code hooks reference](https://code.claude.com/docs/en/hooks).
+
+## Antigravity plugin
+
+Antigravity loads the repository natively via `.antigravity-plugin/plugin.json`
+and root `hooks.json`, sharing `skills/maintain-project-docs/SKILL.md` and
+`hooks/documentation.py` with the `--antigravity` flag.
+
+Because `PreInvocation` runs before every model call within a turn, the script
+captures the baseline and injects the instructions (`injectSteps`) only when no
+state file exists yet for the project and `conversationId` (stored in
+`PLUGIN_DATA/turns/` or the temporary `antigravity-projectdoc/turns/`
+directory). On `Stop`, it removes the state file when `terminationReason` is
+not `NO_TOOL_CALL`, when `continuationActive` is `true`, when a review was
+already requested, or when no review is needed. Otherwise it marks the state as
+blocked and returns `{"decision": "continue", "reason": "..."}` at most once
+per turn.
+
+From the repository root, validate the plugin with `agy plugin validate .`
+(0 errors; warnings about `AGENTS.md` and `hooks/hooks.json` are expected
+because those files belong to Codex).
 
 ## How the Codex checks work
 
@@ -82,8 +104,9 @@ not verify that the edited pages cover every affected behavior.
   It does not follow links to files or directories.
 - The check recognizes `.md`, `.mdx`, `.rst`, `.adoc` and files in `docs/`, `doc/`,
   `documentation/`, `guide/`, `guides/`, or `handbook/`. `AGENTS.md`,
-  `AGENTS.override.md`, `SKILL.md`, hidden directories, and `skills/` do not count
-  as reader documentation. The skill can still use other documentation locations.
+  `AGENTS.override.md`, `CLAUDE.md`, `CLAUDE.local.md`, `GEMINI.md`, `SKILL.md`,
+  hidden directories, and `skills/` do not count as reader documentation. The
+  skill can still use other documentation locations.
 - Each comparison is limited to 15,000 files or 128 MiB. Git commands time out
   after 8 seconds, and each hook after 20 seconds. If a check is unavailable,
   Codex should review the documentation itself.
@@ -148,8 +171,9 @@ Then make an English request in a project with French docs: the reply should be
 in English and the documentation update in French. Python tests check the hook
 logic; they do not verify how Codex writes the resulting documents.
 
-Before each release, increment the version in both manifests
-(`.codex-plugin/plugin.json` and `plugins/projectdoc-claude/.claude-plugin/plugin.json`).
+Before each release, increment the version in all three manifests
+(`.codex-plugin/plugin.json`, `plugins/projectdoc-claude/.claude-plugin/plugin.json`,
+and `.antigravity-plugin/plugin.json`).
 Record the change in the [changelog](../CHANGELOG.md) as described in
 [AGENTS.md](../AGENTS.md). Keep both guides aligned.
 

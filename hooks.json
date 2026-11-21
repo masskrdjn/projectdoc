@@ -1,0 +1,19 @@
+{
+  "projectdoc": {
+    "enabled": true,
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "python ./hooks/documentation.py --antigravity",
+        "timeout": 20
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "python ./hooks/documentation.py --antigravity",
+        "timeout": 20
+      }
+    ]
+  }
+}

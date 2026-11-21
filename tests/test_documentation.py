@@ -141,6 +141,7 @@ class DocumentationTests(unittest.TestCase):
     def test_agent_instructions_are_not_reader_docs(self):
         self.start()
         self.write("AGENTS.md", "Instructions")
+        self.write("GEMINI.md", "Antigravity instructions")
         self.write("skills/a/SKILL.md", "Skill")
         self.assert_blocked()
 
@@ -242,6 +243,106 @@ class DocumentationTests(unittest.TestCase):
         repeat = run("Stop")
         self.assertIn("review already requested", repeat["systemMessage"])
         self.assertNotIn("decision", repeat)
+
+    @unittest.skipUnless(shutil.which("git"), "Git unavailable")
+    def test_antigravity_turn_preserves_baseline_and_continues_once(self):
+        subprocess.run(["git", "init", "-q", str(self.root)], check=True)
+        state_dir = self.temp / "antigravity-state"
+        env = {**os.environ, "PLUGIN_DATA": str(state_dir)}
+
+        def call(name, **extra):
+            result = subprocess.run(
+                [sys.executable, str(ROOT / "hooks/documentation.py"), "--antigravity"],
+                input=json.dumps({
+                    "cwd": str(self.root),
+                    "conversationId": "conv-1",
+                    "hookEventName": name,
+                    **extra,
+                }),
+                text=True, capture_output=True, check=True, env=env,
+            )
+            return json.loads(result.stdout)
+
+        first = call("PreInvocation", invocationNum=1)
+        injected = first["injectSteps"][0]["systemMessage"]["systemMessage"]
+        self.assertIn("skills/maintain-project-docs/SKILL.md", injected)
+
+        self.write("main.py", "print('hello')")
+        self.assertEqual(call("PreInvocation", invocationNum=2), {})
+
+        stop = call("Stop", terminationReason="NO_TOOL_CALL", continuationActive=False)
+        self.assertEqual(stop["decision"], "continue")
+        self.assertIn("ProjectDoc:", stop["reason"])
+
+        # PreInvocation during continuation must not overwrite blocked state.
+        self.assertEqual(call("PreInvocation", invocationNum=3), {})
+        self.assertEqual(
+            call("Stop", terminationReason="NO_TOOL_CALL", continuationActive=True),
+            {},
+        )
+        self.assertEqual(list((state_dir / "turns").glob("*.json")), [])
+
+        # Next turn starts fresh and injects context again.
+        next_turn = call("PreInvocation", invocationNum=4)
+        self.assertIn("injectSteps", next_turn)
+
+    def test_antigravity_updated_docs_pass_and_clean_state(self):
+        state_dir = self.temp / "state" / "turns"
+        base = {"cwd": str(self.root), "conversationId": "conv-docs"}
+        self.assertIn("injectSteps", hook.handle({**base, "hookEventName": "PreInvocation"}, antigravity=True))
+        self.write("main.py", "print('hello')")
+        self.write("README.md", "Run python main.py")
+        self.assertEqual(
+            hook.handle({**base, "hookEventName": "Stop", "terminationReason": "NO_TOOL_CALL", "continuationActive": False}, antigravity=True),
+            {},
+        )
+        self.assertEqual(list(state_dir.glob("*.json")), [])
+
+    def test_antigravity_non_normal_stop_cleans_state_without_blocking(self):
+        state_dir = self.temp / "state" / "turns"
+        for reason in ("USER_CANCELED", "ERROR", "MAX_INVOCATIONS"):
+            with self.subTest(reason=reason):
+                base = {"cwd": str(self.root), "conversationId": f"conv-{reason}"}
+                hook.handle({**base, "hookEventName": "PreInvocation"}, antigravity=True)
+                self.write("main.py", reason)
+                result = hook.handle({**base, "hookEventName": "Stop", "terminationReason": reason}, antigravity=True)
+                self.assertEqual(result, {})
+                self.assertEqual(list(state_dir.glob("*.json")), [])
+
+    def test_antigravity_continuation_is_bounded_without_runtime_flag(self):
+        state_dir = self.temp / "state" / "turns"
+        base = {"cwd": str(self.root), "conversationId": "conv-bound"}
+        hook.handle({**base, "hookEventName": "PreInvocation"}, antigravity=True)
+        self.write("main.py", "changed")
+        first_stop = hook.handle({**base, "hookEventName": "Stop", "terminationReason": "NO_TOOL_CALL"}, antigravity=True)
+        self.assertEqual(first_stop["decision"], "continue")
+        second_stop = hook.handle({**base, "hookEventName": "Stop", "terminationReason": "NO_TOOL_CALL"}, antigravity=True)
+        self.assertEqual(second_stop, {})
+        self.assertEqual(list(state_dir.glob("*.json")), [])
+
+    def test_antigravity_errors_and_unsupported_events_fail_open(self):
+        self.assertEqual(
+            hook.handle({"cwd": str(self.root), "conversationId": "conv-x", "hookEventName": "SessionStart"}, antigravity=True),
+            {},
+        )
+        missing_pre = hook.handle({"cwd": str(self.root), "hookEventName": "PreInvocation"}, antigravity=True)
+        self.assertIn("unavailable", missing_pre["injectSteps"][0]["systemMessage"]["systemMessage"])
+        missing_stop = hook.handle({"cwd": str(self.root), "hookEventName": "Stop"}, antigravity=True)
+        self.assertEqual(missing_stop, {})
+
+    def test_plugin_manifests_share_version_and_valid_antigravity_hooks(self):
+        manifests = [
+            ROOT / ".codex-plugin/plugin.json",
+            ROOT / "plugins/projectdoc-claude/.claude-plugin/plugin.json",
+            ROOT / ".antigravity-plugin/plugin.json",
+        ]
+        versions = {json.loads(path.read_text(encoding="utf-8"))["version"] for path in manifests}
+        self.assertEqual(len(versions), 1)
+        hooks_config = json.loads((ROOT / "hooks.json").read_text(encoding="utf-8"))
+        spec = hooks_config["projectdoc"]
+        self.assertTrue(spec["enabled"])
+        self.assertIn("--antigravity", spec["PreInvocation"][0]["command"])
+        self.assertIn("--antigravity", spec["Stop"][0]["command"])
 
 
 if __name__ == "__main__":

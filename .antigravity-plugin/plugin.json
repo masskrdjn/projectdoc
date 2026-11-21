@@ -1,0 +1,15 @@
+{
+  "name": "projectdoc",
+  "displayName": "ProjectDoc",
+  "version": "0.5.0",
+  "description": "Keep project documentation useful, accessible and current after development in Antigravity.",
+  "author": {
+    "name": "masskrdjn"
+  },
+  "repository": "https://github.com/masskrdjn/projectdoc",
+  "suggestedPrompts": [
+    "Review this project's documentation and update what is needed for handover.",
+    "Create a clear README.md for someone new to this project.",
+    "Check whether our pending changes require documentation updates."
+  ]
+}

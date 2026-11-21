@@ -10,10 +10,12 @@ de petits programmes lancés pour rappeler les consignes et contrôler les oubli
 | Fichier | Rôle |
 | --- | --- |
 | `.codex-plugin/plugin.json` | Manifeste Codex : nom, version et composants du plugin. |
+| `.antigravity-plugin/plugin.json` | Manifeste Antigravity : nom, version et invites suggérées. |
 | `.agents/plugins/marketplace.json` | Catalogue fourni par le dépôt GitHub. |
 | `AGENTS.md` | Consignes de code, de documentation et de version. |
 | `CHANGELOG.md` | Changements de chaque version. |
 | `skills/maintain-project-docs/SKILL.md` | Règles de rédaction et de rangement. |
+| `hooks.json` | Moments où Antigravity lance le contrôle (`PreInvocation`, `Stop`). |
 | `hooks/hooks.json` | Moments où Codex lance le contrôle. |
 | `hooks/documentation.py` | Comparaison des fichiers et demande de vérification. |
 | `tests/test_documentation.py` | Vérifications du comportement des hooks. |
@@ -35,6 +37,26 @@ le chargement local avec `claude --plugin-dir ./plugins/projectdoc-claude`.
 Dans un projet jetable, vérifier les deux événements dans `/hooks`, demander une
 modification de code puis vérifier que la demande de revue intervient au plus
 une fois. Voir la [référence des hooks Claude Code](https://code.claude.com/docs/en/hooks).
+
+## Variante Antigravity
+
+Antigravity charge nativement le dépôt via `.antigravity-plugin/plugin.json` et
+`hooks.json` à la racine, en partageant `skills/maintain-project-docs/SKILL.md`
+et `hooks/documentation.py` avec l'option `--antigravity`.
+
+Comme `PreInvocation` s'exécute avant chaque appel au modèle au sein d'un même
+tour, le script n'enregistre l'état initial et n'injecte les consignes
+(`injectSteps`) que si aucun état n'existe encore pour le couple projet /
+`conversationId` (stocké dans `PLUGIN_DATA/turns/`, ou dans le dossier
+temporaire `antigravity-projectdoc/turns/`). Sur `Stop`, il nettoie l'état si
+l'arrêt est anormal (`terminationReason` différent de `NO_TOOL_CALL`), si
+`continuationActive` vaut `true`, si le tour a déjà été relancé ou si aucune
+revue n'est nécessaire. Sinon, il marque l'état comme bloqué et renvoie
+`{"decision": "continue", "reason": "..."}` une seule fois par tour.
+
+Depuis la racine, valider le plugin avec `agy plugin validate .` (0 erreur ; les
+avertissements sur `AGENTS.md` et `hooks/hooks.json` sont attendus car ces
+fichiers servent à Codex).
 
 ## Fonctionnement dans Codex
 
@@ -90,8 +112,9 @@ concernés.
   Les liens de fichiers et de dossiers ne sont pas suivis.
 - Il reconnaît les documents `.md`, `.mdx`, `.rst`, `.adoc` et les fichiers sous
   `docs/`, `doc/`, `documentation/`, `guide/`, `guides/` ou `handbook/`.
-  Les fichiers `AGENTS.md`, `AGENTS.override.md`, `SKILL.md` et les ressources
-  sous les dossiers cachés ou `skills/` ne comptent pas comme documentation.
+  Les fichiers `AGENTS.md`, `AGENTS.override.md`, `CLAUDE.md`, `CLAUDE.local.md`,
+  `GEMINI.md`, `SKILL.md` et les ressources sous les dossiers cachés ou `skills/`
+  ne comptent pas comme documentation.
 - Un autre emplacement reste utilisable par le skill. Le contrôle peut alors
   demander une vérification supplémentaire sans nécessité de modifier les pages.
 - Chaque comparaison est limitée à 15 000 fichiers et 128 Mio. Les appels Git
@@ -166,8 +189,9 @@ chaque réponse et de chaque README. Dans un projet documenté en français,
 faire une demande en anglais : la réponse doit être en anglais et la mise à
 jour documentaire en français.
 
-Avant chaque livraison, incrémenter la version dans les deux manifestes
-(`.codex-plugin/plugin.json` et `plugins/projectdoc-claude/.claude-plugin/plugin.json`).
+Avant chaque livraison, incrémenter la version dans les trois manifestes
+(`.codex-plugin/plugin.json`, `plugins/projectdoc-claude/.claude-plugin/plugin.json`
+et `.antigravity-plugin/plugin.json`).
 Décrire l’évolution dans le [journal des changements](../CHANGELOG.md) selon
 les règles d’[AGENTS.md](../AGENTS.md).
 

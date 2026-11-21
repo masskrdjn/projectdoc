@@ -108,7 +108,8 @@ review unless the user includes it.
   further help. A single page is enough for a simple project.
 - Use docs/ when a topic needs a separate page. Link each page from the README
   or an index and provide a route back. Prefer versioned relative links.
-- Use AGENTS.md for Codex instructions and CLAUDE.md for Claude Code instructions.
+- Use AGENTS.md for Codex instructions, CLAUDE.md for Claude Code instructions,
+  and GEMINI.md for Antigravity instructions.
 - For handover, include the essential commands, settings, and dependencies.
   Explain maintenance decisions or limitations when they are otherwise unclear.
 
