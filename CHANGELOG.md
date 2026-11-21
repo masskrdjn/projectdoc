@@ -1,5 +1,10 @@
 # Changements
 
+## 0.6.1 — 21 novembre 2026
+
+- Les guides de maintenance décrivent la convention de tags Git annotés
+  `vX.Y.Z` pour les publications de ProjectDoc.
+
 ## 0.6.0 — 21 novembre 2026
 
 - Ajout d'un hook Antigravity `SessionStart` (`hooks/check_update.py` dans `hooks.json`)

@@ -210,6 +210,19 @@ et `.antigravity-plugin/plugin.json`).
 Décrire l’évolution dans le [journal des changements](../CHANGELOG.md) selon
 les règles d’[AGENTS.md](../AGENTS.md).
 
+Une fois les validations terminées et le commit de version publié sur `main`,
+créer un tag Git annoté `vX.Y.Z` sur ce commit, avec la version commune aux
+trois manifestes. Par exemple, pour publier la version `0.6.1`, remplacer
+`COMMIT_DE_VERSION` par l’identifiant du commit publié.
+
+```powershell
+git tag -a v0.6.1 COMMIT_DE_VERSION -m "ProjectDoc 0.6.1"
+git push origin v0.6.1
+```
+
+Si une release GitHub est créée, sélectionner ce tag et reprendre les notes
+de la version dans le journal des changements.
+
 Les contrats utilisés viennent des [hooks Codex](https://developers.openai.com/codex/hooks),
 du [format des plugins](https://developers.openai.com/plugins/build/plugins) et
 des [instructions AGENTS.md](https://developers.openai.com/codex/guides/agents-md),

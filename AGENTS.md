@@ -30,6 +30,8 @@ version déjà publiée pour un contenu différent.
 La branche publiée est `main`. Le dépôt GitHub et son catalogue de plugins
 constituent la source d'installation ; le guide doit utiliser cette adresse,
 sans dépendre d'un chemin local sur le poste de développement.
+À chaque publication de ProjectDoc, poser un tag Git annoté `vX.Y.Z` sur le
+commit validé de `main`, avec la version inscrite dans les trois manifestes.
 
 ## Documentation et garanties
 

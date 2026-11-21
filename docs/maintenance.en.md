@@ -190,6 +190,19 @@ and `.antigravity-plugin/plugin.json`).
 Record the change in the [changelog](../CHANGELOG.md) as described in
 [AGENTS.md](../AGENTS.md). Keep both guides aligned.
 
+After validation passes and the version commit is published on `main`,
+create an annotated Git tag `vX.Y.Z` on that commit using the version shared
+by all three manifests. For example, when publishing version `0.6.1`, replace
+`RELEASE_COMMIT` with the published commit ID.
+
+```powershell
+git tag -a v0.6.1 RELEASE_COMMIT -m "ProjectDoc 0.6.1"
+git push origin v0.6.1
+```
+
+If you create a GitHub release, select this tag and use the notes for that
+version from the changelog.
+
 References: [Codex hooks](https://developers.openai.com/codex/hooks),
 [plugin format](https://developers.openai.com/plugins/build/plugins), and
 [AGENTS.md instructions](https://developers.openai.com/codex/guides/agents-md).
