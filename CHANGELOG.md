@@ -1,5 +1,17 @@
 # Changements
 
+## 0.6.0 — 21 novembre 2026
+
+- Ajout d'un hook Antigravity `SessionStart` (`hooks/check_update.py` dans `hooks.json`)
+  qui vérifie en lecture seule les mises à jour du plugin sur `main` avec un cache TTL
+  de 2 heures (7 200 s) dans `PLUGIN_DATA/update-check.json` (ou le dossier temporaire
+  `antigravity-projectdoc/update-check.json`).
+- Lorsqu'une version plus récente est disponible, un avis Markdown discret
+  (`metadata.user_markdown`) s'affiche au démarrage de la session sans solliciter le
+  modèle. Désactivable via `PROJECTDOC_NO_UPDATE_CHECK=1`.
+- Ajout des tests unitaires dédiés (`tests/test_check_update.py`) et mise à jour des
+  guides français et anglais.
+
 ## 0.5.0 — 21 novembre 2026
 
 - Prise en charge native de Google Antigravity avec `.antigravity-plugin/plugin.json`,

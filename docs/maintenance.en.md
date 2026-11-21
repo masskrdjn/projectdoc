@@ -13,10 +13,12 @@ that Codex runs during a task, remind it of the rules and check for omissions.
 | `AGENTS.md` | Coding, documentation, and version rules. |
 | `CHANGELOG.md` | Changes by version. |
 | `skills/maintain-project-docs/SKILL.md` | Writing and layout rules. |
-| `hooks.json` | When Antigravity runs the checks (`PreInvocation`, `Stop`). |
+| `hooks.json` | When Antigravity runs the hooks (`SessionStart`, `PreInvocation`, `Stop`). |
 | `hooks/hooks.json` | When Codex runs the checks. |
 | `hooks/documentation.py` | File comparison and review requests. |
-| `tests/test_documentation.py` | Tests for hook behavior. |
+| `hooks/check_update.py` | Antigravity plugin update check (`SessionStart`, 2-hour TTL). |
+| `tests/test_documentation.py` | Tests for documentation hook behavior. |
+| `tests/test_check_update.py` | Tests for the Antigravity update-check hook. |
 
 ## Claude Code plugin
 
@@ -41,6 +43,17 @@ and check that the plugin asks for a review at most once. See the
 Antigravity loads the repository natively via `.antigravity-plugin/plugin.json`
 and root `hooks.json`, sharing `skills/maintain-project-docs/SKILL.md` and
 `hooks/documentation.py` with the `--antigravity` flag.
+
+At session start (`SessionStart`), `hooks/check_update.py` compares the
+installed manifest version with `main` in the plugin's Git repository
+(`GIT_TERMINAL_PROMPT=0`, read-only, sending no user or project data). The
+result is cached for 2 hours (7,200 s) in `PLUGIN_DATA/update-check.json` (or
+the temporary `antigravity-projectdoc/update-check.json` file). When the TTL
+expires and the remote SHA is unchanged, the cached version is reused without
+fetching the manifest. If a newer version exists, the hook injects a user-only
+Markdown notice (`metadata.user_markdown`, with `systemMessage: ""`) that is
+never sent to the model. Offline or network errors fail open with `{}`. Set
+`PROJECTDOC_NO_UPDATE_CHECK=1` to disable this check.
 
 Because `PreInvocation` runs before every model call within a turn, the script
 captures the baseline and injects the instructions (`injectSteps`) only when no

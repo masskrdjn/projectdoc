@@ -62,7 +62,10 @@ agy plugin install https://github.com/masskrdjn/projectdoc
 ```
 
 Antigravity loads `.antigravity-plugin/plugin.json`, the `maintain-project-docs`
-skill, and the hooks from `hooks.json` (`PreInvocation` and `Stop`). Invoke the
+skill, and the hooks from `hooks.json` (`SessionStart`, `PreInvocation`, and
+`Stop`). At session start (`SessionStart`), the plugin checks at most once every
+2 hours whether a newer version is available on `main` and displays the update
+command if so (disable with `PROJECTDOC_NO_UPDATE_CHECK=1`). Invoke the
 `maintain-project-docs` skill directly for a standalone documentation review.
 
 ## Use ProjectDoc

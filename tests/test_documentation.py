@@ -341,6 +341,7 @@ class DocumentationTests(unittest.TestCase):
         hooks_config = json.loads((ROOT / "hooks.json").read_text(encoding="utf-8"))
         spec = hooks_config["projectdoc"]
         self.assertTrue(spec["enabled"])
+        self.assertIn("check_update.py", spec["SessionStart"][0]["command"])
         self.assertIn("--antigravity", spec["PreInvocation"][0]["command"])
         self.assertIn("--antigravity", spec["Stop"][0]["command"])
 

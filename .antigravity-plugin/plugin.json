@@ -1,7 +1,7 @@
 {
   "name": "projectdoc",
   "displayName": "ProjectDoc",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Keep project documentation useful, accessible and current after development in Antigravity.",
   "author": {
     "name": "masskrdjn"

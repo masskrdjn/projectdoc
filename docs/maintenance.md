@@ -15,10 +15,12 @@ de petits programmes lancés pour rappeler les consignes et contrôler les oubli
 | `AGENTS.md` | Consignes de code, de documentation et de version. |
 | `CHANGELOG.md` | Changements de chaque version. |
 | `skills/maintain-project-docs/SKILL.md` | Règles de rédaction et de rangement. |
-| `hooks.json` | Moments où Antigravity lance le contrôle (`PreInvocation`, `Stop`). |
+| `hooks.json` | Moments où Antigravity lance les hooks (`SessionStart`, `PreInvocation`, `Stop`). |
 | `hooks/hooks.json` | Moments où Codex lance le contrôle. |
 | `hooks/documentation.py` | Comparaison des fichiers et demande de vérification. |
-| `tests/test_documentation.py` | Vérifications du comportement des hooks. |
+| `hooks/check_update.py` | Vérification de mise à jour Antigravity (`SessionStart`, TTL 2 h). |
+| `tests/test_documentation.py` | Vérifications du comportement des hooks documentaires. |
+| `tests/test_check_update.py` | Vérifications du hook de mise à jour Antigravity. |
 
 ## Variante Claude Code
 
@@ -43,6 +45,19 @@ une fois. Voir la [référence des hooks Claude Code](https://code.claude.com/do
 Antigravity charge nativement le dépôt via `.antigravity-plugin/plugin.json` et
 `hooks.json` à la racine, en partageant `skills/maintain-project-docs/SKILL.md`
 et `hooks/documentation.py` avec l'option `--antigravity`.
+
+Au démarrage d'une session (`SessionStart`), `hooks/check_update.py` compare la
+version du manifeste installé avec celle publiée sur `main` dans le dépôt Git
+du plugin (`GIT_TERMINAL_PROMPT=0`, lecture seule, sans envoyer de données
+utilisateur ou projet). Le résultat est mis en cache pendant 2 heures (7 200 s)
+dans `PLUGIN_DATA/update-check.json` (ou dans le dossier temporaire
+`antigravity-projectdoc/update-check.json`). Si le cache expire mais que le SHA
+distant n'a pas changé, la version en cache est réutilisée sans télécharger le
+manifeste. Si une version plus récente existe, le hook injecte un avis Markdown
+discret (`metadata.user_markdown`, avec `systemMessage: ""`) qui n'est pas lu
+par le modèle. En cas d'erreur réseau ou hors ligne, il renvoie `{}` sans
+bloquer la session. Définir `PROJECTDOC_NO_UPDATE_CHECK=1` pour désactiver ce
+contrôle.
 
 Comme `PreInvocation` s'exécute avant chaque appel au modèle au sein d'un même
 tour, le script n'enregistre l'état initial et n'injecte les consignes

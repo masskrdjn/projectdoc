@@ -51,8 +51,11 @@ l'utilisateur, avec l'anglais en dernier recours. Garder les deux README et les
 deux guides de maintenance cohérents après chaque évolution. Ne pas créer de traductions dans les projets
 utilisateurs qui n'en maintiennent pas déjà, sauf demande explicite.
 
-Les hooks ne modifient jamais les sources, n'appellent aucun modèle et n'envoient
-aucune donnée sur le réseau. Leur contrôle ne prouve pas la justesse des documents.
+Les hooks ne modifient jamais les sources et n'appellent aucun modèle. Les hooks
+de contrôle documentaire (`hooks/documentation.py`) n'accèdent jamais au réseau ;
+seul le hook Antigravity `SessionStart` (`hooks/check_update.py`) interroge en
+lecture seule le dépôt du plugin (au plus toutes les 2 heures) sans envoyer de
+données utilisateur ou projet. Leur contrôle ne prouve pas la justesse des documents.
 Toute continuation demandée par Stop doit être bornée à une fois par tour.
 
 Validation : `python -m unittest discover -s tests -v`.

@@ -65,9 +65,12 @@ agy plugin install https://github.com/masskrdjn/projectdoc
 ```
 
 Antigravity charge `.antigravity-plugin/plugin.json`, le skill
-`maintain-project-docs` et les hooks de `hooks.json` (`PreInvocation` et `Stop`).
-Pour lancer une revue documentaire à la demande, invoquer le skill
-`maintain-project-docs`.
+`maintain-project-docs` et les hooks de `hooks.json` (`SessionStart`,
+`PreInvocation` et `Stop`). Au démarrage d'une session (`SessionStart`), le
+plugin vérifie au plus une fois toutes les 2 heures si une nouvelle version est
+disponible sur `main` et affiche la commande de mise à jour le cas échéant
+(désactivable avec `PROJECTDOC_NO_UPDATE_CHECK=1`). Pour lancer une revue
+documentaire à la demande, invoquer le skill `maintain-project-docs`.
 
 ## Pendant une tâche
 

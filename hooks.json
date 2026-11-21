@@ -1,6 +1,13 @@
 {
   "projectdoc": {
     "enabled": true,
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "python ./hooks/check_update.py",
+        "timeout": 12
+      }
+    ],
     "PreInvocation": [
       {
         "type": "command",
